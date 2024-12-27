@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('currencies', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
+            $table->id();
+            $table->string('name')->unique();
             $table->decimal('value', 15, 2);
             $table->string('symbol');
-            $table->string('row_id')->unique();
+            $table->uuid('row_id')->unique(); // Génération automatique avec UUID
             $table->timestamps();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();

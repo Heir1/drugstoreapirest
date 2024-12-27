@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('suppliers', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-            $table->string('row_id')->unique();
-            $table->timestamps();
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->id();
+            $table->string('name');  // Nom du fournisseur
+            $table->uuid('row_id')->unique();  // Générer automatiquement un UUID avec la fonction PostgreSQL uuid_generate_v4()
+            $table->timestamps();  // Colonnes created_at et updated_at
+            $table->string('created_by')->nullable();  // Identifiant de l'utilisateur créant l'enregistrement
+            $table->string('updated_by')->nullable();  // Identifiant de l'utilisateur mettant à jour l'enregistrement
         });
     }
 

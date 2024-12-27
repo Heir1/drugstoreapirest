@@ -4,68 +4,158 @@ namespace App\Http\Controllers;
 
 use App\Models\Packaging;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class PackagingController extends Controller
 {
-    // Display a listing of the packaging
+    /**
+     * Display a listing of all packagings.
+     */
     public function index()
     {
-        $packaging = Packaging::all(); // You can add pagination if needed
-        return response()->json($packaging);
+        try {
+            $packagings = Packaging::all(); // Retrieve all packagings
+            return response()->json($packagings, 200); // Return 200 OK with packagings data
+        } catch (\Exception $e) {
+            Log::error('Error retrieving packagings: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error retrieving packagings',
+                'message' => $e->getMessage(),
+            ], 500); // Internal Server Error
+        }
     }
 
-    // Store a newly created packaging in the database
+    /**
+     * Store a newly created packaging in the database.
+     */
     public function store(Request $request)
     {
-        // Validate the incoming data
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'row_id' => 'required|string|max:255|unique:packagings',
-        ]);
+        try {
+            // Validate incoming data
+            $request->validate([
+                'name' => 'required|string|max:255', // Validate the name field
+            ]);
 
-        // Create a new packaging record
-        $packaging = Packaging::create([
-            'name' => $request->name,
-            'row_id' => $request->row_id,
-            'created_by' => auth()->id(), // Optional, if you want to track who created the record
-        ]);
+            // Generate a UUID for 'row_id'
+            $row_id = (string) Str::uuid();  // Generate UUID for row_id
 
-        return response()->json($packaging, 201); // Return 201 Created status
+            // Create a new packaging record
+            $packaging = Packaging::create([
+                'name' => $request->name,
+                'row_id' => $row_id, // Generated UUID for row_id
+                'created_by' => auth()->id() ?? null, // Assuming you are using authentication
+            ]);
+
+            return response()->json($packaging, 201); // Return created packaging with 201 status
+        } catch (ValidationException $e) {
+            Log::error('Validation Error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Validation failed',
+                'message' => $e->errors(),
+            ], 422); // Validation error
+        } catch (\Exception $e) {
+            Log::error('Error storing packaging: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error storing packaging',
+                'message' => $e->getMessage(),
+            ], 500); // Internal Server Error
+        }
     }
 
-    // Display the specified packaging
+    /**
+     * Display the specified packaging.
+     */
     public function show($id)
     {
-        $packaging = Packaging::findOrFail($id); // Will return 404 if not found
-        return response()->json($packaging);
+        try {
+            $packaging = Packaging::findOrFail($id); // Find the packaging by ID
+            return response()->json($packaging, 200); // Return packaging data with 200 status
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Packaging not found: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Packaging not found',
+                'message' => 'The packaging with the given ID does not exist.',
+            ], 404); // 404 Not Found
+        } catch (\Exception $e) {
+            Log::error('Error retrieving packaging: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error retrieving packaging',
+                'message' => $e->getMessage(),
+            ], 500); // Internal Server Error
+        }
     }
 
-    // Update the specified packaging in the database
+    /**
+     * Update the specified packaging in the database.
+     */
     public function update(Request $request, $id)
     {
-        // Validate the incoming data
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'row_id' => 'required|string|max:255|unique:packagings,row_id,' . $id,
-        ]);
+        try {
+            // Validate incoming data
+            $request->validate([
+                'name' => 'required|string|max:255',
+            ]);
 
-        // Find the packaging and update it
-        $packaging = Packaging::findOrFail($id);
-        $packaging->update([
-            'name' => $request->name,
-            'row_id' => $request->row_id,
-            'updated_by' => auth()->id(), // Optional, if you want to track who updated the record
-        ]);
+            // Find the packaging by ID
+            $packaging = Packaging::findOrFail($id);
 
-        return response()->json($packaging);
+            // Update the packaging record
+            $packaging->update([
+                'name' => $request->name,
+                'updated_by' => auth()->id() ?? null, // Assuming you are using authentication
+            ]);
+
+            return response()->json($packaging, 200); // Return updated packaging data with 200 status
+        } catch (ValidationException $e) {
+            Log::error('Validation Error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Validation failed',
+                'message' => $e->errors(),
+            ], 422); // Validation error
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Packaging not found: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Packaging not found',
+                'message' => 'The packaging with the given ID does not exist.',
+            ], 404); // 404 Not Found
+        } catch (\Exception $e) {
+            Log::error('Error updating packaging: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error updating packaging',
+                'message' => $e->getMessage(),
+            ], 500); // Internal Server Error
+        }
     }
 
-    // Remove the specified packaging from the database
+    /**
+     * Remove the specified packaging from the database.
+     */
     public function destroy($id)
     {
-        $packaging = Packaging::findOrFail($id);
-        $packaging->delete();
+        try {
+            // Find the packaging by ID
+            $packaging = Packaging::findOrFail($id);
 
-        return response()->json(['message' => 'Packaging deleted successfully']);
+            // Delete the packaging record
+            $packaging->delete();
+
+            return response()->json([
+                'message' => 'Packaging deleted successfully',
+            ], 200); // Return 200 OK with success message
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Packaging not found: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Packaging not found',
+                'message' => 'The packaging with the given ID does not exist.',
+            ], 404); // 404 Not Found
+        } catch (\Exception $e) {
+            Log::error('Error deleting packaging: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error deleting packaging',
+                'message' => $e->getMessage(),
+            ], 500); // Internal Server Error
+        }
     }
 }

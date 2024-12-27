@@ -2,69 +2,162 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Indication;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class IndicationController extends Controller
 {
-    // Display a listing of the indications
+    /**
+     * Display a listing of the indications.
+     */
     public function index()
     {
-        $indications = Indication::all(); // You can add pagination if needed
-        return response()->json($indications);
+        try {
+            // Récupérer toutes les indications
+            $indications = Indication::with(['articles'])->get();
+            return response()->json($indications, 200); // Retourner les indications avec un code 200 OK
+        } catch (\Exception $e) {
+            Log::error('Error retrieving indications: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error retrieving indications',
+                'message' => $e->getMessage(),
+            ], 500); // Erreur serveur interne
+        }
     }
 
-    // Store a newly created indication in the database
+    /**
+     * Store a newly created indication in the database.
+     */
     public function store(Request $request)
     {
-        // Validate the incoming data
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'row_id' => 'required|string|max:255|unique:indications',
-        ]);
+        try {
+            // Validation des données d'entrée
+            $request->validate([
+                'name' => 'required|string|max:255', // Validation du champ 'name'
+            ]);
 
-        // Create a new indication record
-        $indication = Indication::create([
-            'name' => $request->name,
-            'row_id' => $request->row_id,
-            'created_by' => auth()->id(), // Optional, if you want to track who created the record
-        ]);
+            // Générer un UUID pour 'row_id'
+            $row_id = (string) Str::uuid();  // Générer un UUID pour le champ 'row_id'
 
-        return response()->json($indication, 201); // Return 201 Created status
+            // Création de la nouvelle indication
+            $indication = Indication::create([
+                'name' => $request->name,
+                'row_id' => $row_id,  // UUID généré pour 'row_id'
+                'created_by' => auth()->id() ?? null, // Utilisateur qui a créé l'indication
+            ]);
+
+            return response()->json($indication, 201); // Retourner l'indication créée avec un code 201 Created
+        } catch (ValidationException $e) {
+            Log::error('Validation Error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Validation failed',
+                'message' => $e->errors(),
+            ], 422); // Erreur de validation
+        } catch (\Exception $e) {
+            Log::error('Error storing indication: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error storing indication',
+                'message' => $e->getMessage(),
+            ], 500); // Erreur serveur interne
+        }
     }
 
-    // Display the specified indication
+    /**
+     * Display the specified indication.
+     */
     public function show($id)
     {
-        $indication = Indication::findOrFail($id); // Will return 404 if not found
-        return response()->json($indication);
+        try {
+            // Trouver l'indication par son ID
+            $indication = Indication::findOrFail($id);
+            return response()->json($indication, 200); // Retourner l'indication trouvée avec un code 200 OK
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Indication not found: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Indication not found',
+                'message' => 'The indication with the given ID does not exist.',
+            ], 404); // Retourner un code 404 Not Found
+        } catch (\Exception $e) {
+            Log::error('Error retrieving indication: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error retrieving indication',
+                'message' => $e->getMessage(),
+            ], 500); // Erreur serveur interne
+        }
     }
 
-    // Update the specified indication in the database
+    /**
+     * Update the specified indication in the database.
+     */
     public function update(Request $request, $id)
     {
-        // Validate the incoming data
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'row_id' => 'required|string|max:255|unique:indications,row_id,' . $id,
-        ]);
+        try {
+            // Validation des données d'entrée
+            $request->validate([
+                'name' => 'required|string|max:255',
+            ]);
 
-        // Find the indication and update it
-        $indication = Indication::findOrFail($id);
-        $indication->update([
-            'name' => $request->name,
-            'row_id' => $request->row_id,
-            'updated_by' => auth()->id(), // Optional, if you want to track who updated the record
-        ]);
+            // Trouver l'indication par son ID
+            $indication = Indication::findOrFail($id);
 
-        return response()->json($indication);
+            // Mise à jour de l'indication
+            $indication->update([
+                'name' => $request->name,
+                'updated_by' => auth()->id() ?? null, // Utilisateur ayant mis à jour l'indication
+            ]);
+
+            return response()->json($indication, 200); // Retourner l'indication mise à jour avec un code 200 OK
+        } catch (ValidationException $e) {
+            Log::error('Validation Error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Validation failed',
+                'message' => $e->errors(),
+            ], 422); // Erreur de validation
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Indication not found: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Indication not found',
+                'message' => 'The indication with the given ID does not exist.',
+            ], 404); // Retourner un code 404 Not Found
+        } catch (\Exception $e) {
+            Log::error('Error updating indication: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error updating indication',
+                'message' => $e->getMessage(),
+            ], 500); // Erreur serveur interne
+        }
     }
 
-    // Remove the specified indication from the database
+    /**
+     * Remove the specified indication from the database.
+     */
     public function destroy($id)
     {
-        $indication = Indication::findOrFail($id);
-        $indication->delete();
+        try {
+            // Trouver l'indication par son ID
+            $indication = Indication::findOrFail($id);
 
-        return response()->json(['message' => 'Indication deleted successfully']);
+            // Supprimer l'indication
+            $indication->delete();
+
+            return response()->json([
+                'message' => 'Indication deleted successfully',
+            ], 200); // Retourner un message de succès avec un code 200 OK
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Indication not found: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Indication not found',
+                'message' => 'The indication with the given ID does not exist.',
+            ], 404); // Retourner un code 404 Not Found
+        } catch (\Exception $e) {
+            Log::error('Error deleting indication: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error deleting indication',
+                'message' => $e->getMessage(),
+            ], 500); // Erreur serveur interne
+        }
     }
 }

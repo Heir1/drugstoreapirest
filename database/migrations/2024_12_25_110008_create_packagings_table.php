@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('packagings', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('name');
-            $table->string('row_id')->unique();
+            $table->uuid('row_id')->unique();  
             $table->timestamps();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
