@@ -25,6 +25,14 @@ class ArticleController extends Controller
     {
         // Charger les relations many-to-many avec les autres modèles
         $articles = Article::with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+
+        $articles->each(function ($article) {
+            $article->placements->makeHidden('pivot');
+            $article->molecules->makeHidden('pivot');
+            $article->suppliers->makeHidden('pivot');
+            $article->indications->makeHidden('pivot');
+        });
+
         return response()->json($articles);
     }
 
@@ -69,19 +77,20 @@ class ArticleController extends Controller
                 'molecules' => 'nullable|array',
                 'suppliers' => 'nullable|array',
                 'indications' => 'nullable|array',
+                
             ]);
 
             // Vérification de l'existence d'un article avec le même barcode
             if (Article::where('barcode', $validated['barcode'])->exists()) {
                 return response()->json([
-                    'error' => 'Un article avec ce code-barres existe déjà.'
+                    'message' => 'Un article avec ce code-barres existe déjà.'
                 ], Response::HTTP_CONFLICT); // Code 409 pour conflit
             }
 
             // Vérification de l'existence d'un article avec la même description
             if (Article::where('description', $validated['description'])->exists()) {
                 return response()->json([
-                    'error' => 'Un article avec cette description existe déjà.'
+                    'message' => 'Un article avec cette description existe déjà.'
                 ], Response::HTTP_CONFLICT); // Code 409 pour conflit
             }
 
@@ -97,7 +106,6 @@ class ArticleController extends Controller
                 'packaging_id' => $validated['packaging_id'],
                 'alert' => $validated['alert'] ?? false,
                 'expiration_date' => $validated['expiration_date'],
-                'comment' => $validated['comment'],
                 'row_id' => Str::uuid(),  // Générer un UUID
                 'created_by' => auth()->user()->id ?? null,  // Si vous avez un système d'authentification
             ]);
