@@ -172,8 +172,9 @@ class ArticleController extends Controller
                 'category_id' => 'nullable|exists:categories,id',
                 'packaging_id' => 'nullable|exists:packagings,id',
                 'alert' => 'nullable|integer',
+                'is_active' => 'nullable|boolean',
                 'expiration_date' => 'nullable|date',
-                // 'comment' => 'nullable|string',
+                'comment' => 'nullable|string',
                 'placements' => 'nullable|array',
                 'molecules' => 'nullable|array',
                 'suppliers' => 'nullable|array',
@@ -182,18 +183,18 @@ class ArticleController extends Controller
 
 
             // Vérification de l'existence d'un article avec le même barcode
-            if (Article::where('barcode', $validated['barcode'])->exists()) {
-                return response()->json([
-                    'error' => 'Un article avec ce code-barres existe déjà.'
-                ], Response::HTTP_CONFLICT); // Code 409 pour conflit
-            }
+            // if (Article::where('barcode', $validated['barcode'])->exists()) {
+            //     return response()->json([
+            //         'error' => 'Un article avec ce code-barres existe déjà.'
+            //     ], Response::HTTP_CONFLICT); // Code 409 pour conflit
+            // }
 
             // Vérification de l'existence d'un article avec la même description
-            if (Article::where('description', $validated['description'])->exists()) {
-                return response()->json([
-                    'error' => 'Un article avec cette description existe déjà.'
-                ], Response::HTTP_CONFLICT); // Code 409 pour conflit
-            }
+            // if (Article::where('description', $validated['description'])->exists()) {
+            //     return response()->json([
+            //         'error' => 'Un article avec cette description existe déjà.'
+            //     ], Response::HTTP_CONFLICT); // Code 409 pour conflit
+            // }
 
             // Mettre à jour l'article
             $article->update([
@@ -206,8 +207,9 @@ class ArticleController extends Controller
                 'category_id' => $validated['category_id'],
                 'packaging_id' => $validated['packaging_id'],
                 'alert' => $validated['alert'],
+                'is_active' => $validated['is_active'],
                 'expiration_date' => $validated['expiration_date'],
-                // 'comment' => $validated['comment'],
+                'comment' => $validated['comment'],
                 'updated_by' => auth()->user()->id ?? null,
             ]);
 
@@ -230,6 +232,9 @@ class ArticleController extends Controller
             if (isset($validated['indications'])) {
                 $article->indications()->sync($validated['indications']);
             }
+
+            // Charger les relations many-to-many avec les autres modèles
+            $article->load(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications']);
 
             return response()->json($article, Response::HTTP_OK);
 
