@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('articles', function (Blueprint $table) {
 
             $table->id();
-            $table->string('barcode')->unique();
+            $table->string('barcode')->unique()->nullable();
+            $table->text('location')->nullable();
             $table->text('description')->unique();
-            $table->boolean('alert')->default(false);
-            $table->date('expiration_date');
+            $table->integer('alert')->default(0);
+            $table->date('expiration_date')->nullable();
             $table->integer('quantity')->default(0);
             $table->decimal('purchase_price', 15, 2);
             $table->decimal('selling_price', 15, 2);
