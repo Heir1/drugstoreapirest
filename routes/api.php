@@ -9,6 +9,8 @@ use App\Http\Controllers\IndicationController;
 use App\Http\Controllers\PlacementController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PackagingController;
+use App\Http\Controllers\MovementTypeController;
+use App\Http\Controllers\MovementController;
 
 // Routes pour les Articles
 Route::apiResource('articles', ArticleController::class);
@@ -50,3 +52,9 @@ Route::delete('articles/{article}/molecules/{molecule}', [ArticleController::cla
 Route::delete('articles/{article}/indications/{indication}', [ArticleController::class, 'removeIndication']);
 Route::delete('articles/{article}/placements/{placement}', [ArticleController::class, 'removePlacement']);
 Route::delete('articles/{article}/suppliers/{supplier}', [ArticleController::class, 'removeSupplier']);
+
+// Routes pour les types de movements (movements)
+Route::apiResource('movement-types', MovementTypeController::class);
+
+// Routes pour les movements (movements)
+Route::apiResource('movements', MovementController::class);

@@ -105,6 +105,7 @@ class ArticleController extends Controller
                 'category_id' => $validated['category_id'],
                 'packaging_id' => $validated['packaging_id'],
                 'alert' => $validated['alert'],
+                'comment' => "Pas encore disponible",
                 'expiration_date' => $validated['expiration_date'],
                 'row_id' => Str::uuid(),  // Générer un UUID
                 'created_by' => auth()->user()->id ?? null,  // Si vous avez un système d'authentification
