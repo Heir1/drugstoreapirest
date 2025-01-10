@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('movements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('article_id')->constrained('articles')->onDelete('cascade');
+            $table->integer('old_article_stock');
             $table->integer('quantity');
             $table->foreignId('movement_type_id')->constrained('movement_types')->onDelete('cascade'); // Foreign key to movement_types
-            $table->date('movement_date');
+            $table->date('movement_date')->default(DB::raw('CURRENT_DATE'));
             $table->string('reference', 100)->nullable();
             $table->timestamps();
         });

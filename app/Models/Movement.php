@@ -15,6 +15,7 @@ class Movement extends Model
         'movement_type_id',
         'movement_date',
         'reference',
+        'old_article_stock',
     ];
 
     public function article()

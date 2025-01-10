@@ -9,6 +9,7 @@ use App\Models\Packaging;
 use App\Models\Placement;
 use App\Models\Molecule;
 use App\Models\Supplier;
+use App\Models\Movement;
 use App\Models\Indication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -105,11 +106,24 @@ class ArticleController extends Controller
                 'category_id' => $validated['category_id'],
                 'packaging_id' => $validated['packaging_id'],
                 'alert' => $validated['alert'],
-                'comment' => "Pas encore disponible",
+                'comment' => $validated['comment'],
                 'expiration_date' => $validated['expiration_date'],
                 'row_id' => Str::uuid(),  // Générer un UUID
                 'created_by' => auth()->user()->id ?? null,  // Si vous avez un système d'authentification
             ]);
+
+
+            if($validated['quantity'] > 0){
+
+                $movement = new Movement();
+                $movement->article_id = $article->id;
+                $movement->quantity = $validated['quantity'];
+                $movement->movement_type_id = 1;
+                $movement->movement_date = "2025-01-04";
+                $movement->reference = Str::uuid();
+    
+                $movement->save();
+            }
 
             // Attacher les placements (relation many-to-many)
             if (isset($validated['placements'])) {
@@ -208,7 +222,7 @@ class ArticleController extends Controller
                 'category_id' => $validated['category_id'],
                 'packaging_id' => $validated['packaging_id'],
                 'alert' => $validated['alert'],
-                'is_active' => $validated['is_active'],
+                'is_active' =>  $validated['is_active'],
                 'expiration_date' => $validated['expiration_date'],
                 'comment' => $validated['comment'],
                 'updated_by' => auth()->user()->id ?? null,
