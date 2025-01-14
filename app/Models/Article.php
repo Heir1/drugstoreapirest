@@ -65,6 +65,11 @@ class Article extends Model
         return $this->belongsTo(Packaging::class, 'packaging_id');  // clé étrangère 'packaging_id'
     }
 
+    public function invoiceLines()
+    {
+        return $this->hasMany(InvoiceLine::class);
+    }
+
 
     protected static function booted()
     {

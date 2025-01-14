@@ -54,6 +54,7 @@ class MovementController extends Controller
                     'reference' => 'nullable|string|max:100',
                     'purchase_price' => 'required|integer',
                     'selling_price' => 'required|integer',
+                    'expiration_date' => 'required|string',
                 ]);
         
                 // $movement = Movement::create($validated);
@@ -64,6 +65,10 @@ class MovementController extends Controller
                 if($article->purchase_price !==  $validated['purchase_price']){
                     $article->purchase_price = $validated['purchase_price'];
                     $article->selling_price = $validated['selling_price']; 
+                }
+
+                if($article->expiration_date !==  $validated['expiration_date']){
+                    $article->expiration_date = $validated['expiration_date'];
                 }
         
                 $movement = new Movement();

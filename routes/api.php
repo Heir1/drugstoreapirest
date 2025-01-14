@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\ArticleControllerCustomized;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MoleculeController;
@@ -11,8 +12,11 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PackagingController;
 use App\Http\Controllers\MovementTypeController;
 use App\Http\Controllers\MovementController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\RateController;
 
 // Routes pour les Articles
+
 Route::apiResource('articles', ArticleController::class);
 
 // Routes pour les devises (Currencies)
@@ -36,9 +40,13 @@ Route::apiResource('suppliers', SupplierController::class);
 // Routes pour les Emballages (Packagings)
 Route::apiResource('packagings', PackagingController::class);
 
+// getAllArticles ArticleControllerCustomized
+Route::get('articles', [ArticleControllerCustomized::class, 'getAllArticles']);
+Route::put('articles/{id}', [ArticleControllerCustomized::class, 'updateArticle']);
+
 // Exemple de route personnalisée pour un article spécifique
 Route::get('articles/{id}', [ArticleController::class, 'show']);
-Route::put('articles/{id}', [ArticleController::class, 'update']);
+// Route::put('articles/{id}', [ArticleController::class, 'update']);
 Route::delete('articles/{id}', [ArticleController::class, 'destroy']);
 
 // Routes pour attacher des relations Many-to-Many dans Article
@@ -59,3 +67,17 @@ Route::apiResource('movement-types', MovementTypeController::class);
 // Routes pour les movements (movements)
 Route::apiResource('movements', MovementController::class);
 Route::get('movements/type/{type}', [MovementController::class, 'getMovementsByType']);
+
+// MovementControllerCustomized
+// Route::get('movements', [MovementControllerCustomized::class, 'getAllMovements']);
+Route::put('articles/{id}', [ArticleControllerCustomized::class, 'updateArticle']);
+
+
+// Routes la création de facture InvoiceController
+Route::get('/invoices', [InvoiceController::class, 'getAllInvoices']);
+Route::post('/invoices', [InvoiceController::class, 'createInvoice']);
+Route::delete('/invoices/{id}', [InvoiceController::class, 'deleteInvoice']);
+
+
+
+Route::apiResource('rates', RateController::class);
