@@ -66,7 +66,7 @@ Route::apiResource('movement-types', MovementTypeController::class);
 
 // Routes pour les movements (movements)
 Route::apiResource('movements', MovementController::class);
-Route::get('movements/type/{type}', [MovementController::class, 'getMovementsByType']);
+Route::get('movements/type/{type}/{firstrange}/{secondrange}', [MovementController::class, 'getMovementsByType']);
 
 // MovementControllerCustomized
 // Route::get('movements', [MovementControllerCustomized::class, 'getAllMovements']);

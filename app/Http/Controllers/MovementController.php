@@ -6,6 +6,7 @@ use App\Models\Movement;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Carbon\Carbon;
 
 class MovementController extends Controller
 {
@@ -23,14 +24,25 @@ class MovementController extends Controller
     /**
      * Get all movements with a specific movement type.
      */
-    public function getMovementsByType($type)
+    public function getMovementsByType($type, $firstrange, $secondrange)
     {
         // Retrieve movements with the specified type
         // $movements = Movement::whereHas('movementType', function ($query) use ($type) {
         //     $query->where('name', $type);
         // })->with(['movementType', 'article.placements', 'article.suppliers'])->get();
 
-        $movements = Movement::with(['movementType', 'article.placements', 'article.suppliers'])->where("movement_type_id",$type)->get();
+        // Récupérer la date du jour
+        // $today = Carbon::today();
+
+        $firstrange = Carbon::parse($firstrange)->startOfDay();
+        $secondrange = Carbon::parse($secondrange)->endOfDay();
+
+        
+        // return response()->json($secondrange, 200);
+
+        // $movements = Movement::whereDate('created_at', $firstrange)->with(['movementType', 'article.placements', 'article.suppliers'])->where("movement_type_id",$type)->get();
+
+        $movements = Movement::whereBetween('created_at', [$firstrange, $secondrange])->with(['movementType', 'article.placements', 'article.suppliers'])->where('movement_type_id', $type)->get();
 
         if ($movements->isEmpty()) {
             return response()->json(['message' => 'No movements found for this type.'], 404);

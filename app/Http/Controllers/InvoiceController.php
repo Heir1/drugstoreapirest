@@ -57,8 +57,9 @@ class InvoiceController extends Controller
 
             
             foreach ($validated['articles'] as $articleData) {
+                
                 $article = Article::findOrFail($articleData['id']);
-                $quantity = $articleData['quantity'];
+                $quantity = $articleData['quantity1'];
                 
                 // Check stock availability
                 if ($article->quantity < $quantity) {
