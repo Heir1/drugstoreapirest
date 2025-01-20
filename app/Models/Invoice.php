@@ -15,6 +15,12 @@ class Invoice extends Model
         return $this->hasMany(InvoiceLine::class);
     }
 
+    public function paymentModes()
+    {
+        return $this->belongsTo(PaymentMode::class, 'paymentmode_id');
+    }
+
+
     public static function generateInvoiceNumber()
     {
         $lastInvoice = self::latest('id')->first();

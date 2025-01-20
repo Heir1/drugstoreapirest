@@ -45,7 +45,8 @@ class MovementController extends Controller
         $movements = Movement::whereBetween('created_at', [$firstrange, $secondrange])->with(['movementType', 'article.placements', 'article.suppliers'])->where('movement_type_id', $type)->get();
 
         if ($movements->isEmpty()) {
-            return response()->json(['message' => 'No movements found for this type.'], 404);
+            // return response()->json(['message' => 'No movements found for this type.'], 404);
+            return response()->json([], 200);
         }
 
         return response()->json($movements, 200);

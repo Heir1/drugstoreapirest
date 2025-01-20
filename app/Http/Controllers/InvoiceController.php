@@ -17,7 +17,12 @@ class InvoiceController extends Controller
 {
     public function getAllInvoices(){
                 // Charger les relations many-to-many avec les autres modèles
-                $invoices = InvoiceLine::with(['invoices', 'articles'])->get();
+
+                // $invoices = InvoiceLine::with(['invoices', 'articles'])->get();
+
+                $invoices = InvoiceLine::with(['invoices', 'articles']) ->whereHas('invoices', function ($query) {
+                    $query->where('paymentmode_id', 1);
+                })->get();
                 
 
                 // with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
@@ -34,23 +39,41 @@ class InvoiceController extends Controller
 
     public function createInvoice(Request $request)
     {
+
+        
         DB::beginTransaction();
+
+
 
         try {
             // Validate request data
             $validated = $request->validate([
+                // 'paymentmode' => 'required|integer',
                 'articles' => 'required|array',
                 'articles.*.id' => 'required|exists:articles,id',
                 'articles.*.quantity1' => 'required|integer|min:1',
             ]);
 
-            // Generate unique invoice number
-            $invoiceNumber = Invoice::generateInvoiceNumber();
+            return response()->json([
+                'message' => 'Invoice successfully created',
+                'invoice' => $request,
+            ], 201);
+
+            // // Generate unique invoice number
+            // $invoiceNumber = Invoice::generateInvoiceNumber();
+
+            return response()->json([
+                'message' => 'Invoice successfully created',
+                'invoice' => $request,
+            ], 201);
+
+            // return $validated;
 
             // Create the invoice
             $invoice = Invoice::create([
                 'invoice_date' => now(),
                 'invoice_number' => $invoiceNumber,
+                'paymentmode_id' => $validated['paymentmode']
             ]);
 
             $totalExclTax = 0;

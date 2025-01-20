@@ -14,6 +14,7 @@ use App\Http\Controllers\MovementTypeController;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\RateController;
+use App\Http\Controllers\PaymentModeController;
 
 // Routes pour les Articles
 
@@ -79,5 +80,7 @@ Route::post('/invoices', [InvoiceController::class, 'createInvoice']);
 Route::delete('/invoices/{id}', [InvoiceController::class, 'deleteInvoice']);
 
 
-
 Route::apiResource('rates', RateController::class);
+
+
+Route::resource('payment-modes', PaymentModeController::class);
