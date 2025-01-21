@@ -12,60 +12,62 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Response;
+use Carbon\Carbon;
 
 class InvoiceController extends Controller
+
+
 {
-    public function getAllInvoices(){
-                // Charger les relations many-to-many avec les autres modèles
+    
+    public function getAllInvoices($mode, $firstrange, $secondrange){
 
-                // $invoices = InvoiceLine::with(['invoices', 'articles'])->get();
+        // $mode, $firstrange, $secondrange
 
-                $invoices = InvoiceLine::with(['invoices', 'articles']) ->whereHas('invoices', function ($query) {
-                    $query->where('paymentmode_id', 1);
-                })->get();
-                
+        $firstrange = Carbon::parse($firstrange)->startOfDay();
+        $secondrange = Carbon::parse($secondrange)->endOfDay();
 
-                // with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+        // // Charger les relations many-to-many avec les autres modèles
 
-                // $articles->each(function ($article) {
-                //     $article->placements->makeHidden('pivot');
-                //     $article->molecules->makeHidden('pivot');
-                //     $article->suppliers->makeHidden('pivot');
-                //     $article->indications->makeHidden('pivot');
-                // });
+        // // $invoices = InvoiceLine::with(['invoices', 'articles'])->get();
         
-                return response()->json($invoices);
+
+        $invoices = InvoiceLine::whereBetween('created_at', [$firstrange, $secondrange])->with(['invoices', 'articles'])->whereHas('invoices', function ($query) {
+            $query->where('paymentmode_id', 1);
+        })->get();
+        
+
+        // with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+
+        // $articles->each(function ($article) {
+        //     $article->placements->makeHidden('pivot');
+        //     $article->molecules->makeHidden('pivot');
+        //     $article->suppliers->makeHidden('pivot');
+        //     $article->indications->makeHidden('pivot');
+        // });
+
+        return response()->json($invoices);
+
     }
 
     public function createInvoice(Request $request)
     {
 
-        
         DB::beginTransaction();
-
-
 
         try {
             // Validate request data
             $validated = $request->validate([
-                // 'paymentmode' => 'required|integer',
+                'paymentmode' => 'required|integer',
                 'articles' => 'required|array',
                 'articles.*.id' => 'required|exists:articles,id',
                 'articles.*.quantity1' => 'required|integer|min:1',
             ]);
 
-            return response()->json([
-                'message' => 'Invoice successfully created',
-                'invoice' => $request,
-            ], 201);
-
             // // Generate unique invoice number
-            // $invoiceNumber = Invoice::generateInvoiceNumber();
+            $invoiceNumber = Invoice::generateInvoiceNumber();
 
-            return response()->json([
-                'message' => 'Invoice successfully created',
-                'invoice' => $request,
-            ], 201);
+
+            // return $validated['paymentmode'];
 
             // return $validated;
 
@@ -73,7 +75,8 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'invoice_date' => now(),
                 'invoice_number' => $invoiceNumber,
-                'paymentmode_id' => $validated['paymentmode']
+                'paymentmode_id' => $validated['paymentmode'],
+                'client_name' => "Héritier N'kele"
             ]);
 
             $totalExclTax = 0;
@@ -127,6 +130,7 @@ class InvoiceController extends Controller
                 'total_excl_tax' => $totalExclTax,
                 'vat' => $vat,
                 'total_incl_tax' => $totalInclTax,
+                'paymentmode_id' => $validated['paymentmode']
             ]);
 
             DB::commit();
@@ -158,6 +162,102 @@ class InvoiceController extends Controller
                 'message' => $e->getMessage(),
             ], 500); // Internal Server Error
         }
+    }
+
+
+    public function updateInvoice(Request $request, $id){
+
+
+        // $validated = $request->validate([
+        //     'article_id' => 'required|integer',
+        //     'id' => 'required|integer',
+        //     'quantity' => 'required|integer'
+        // ]);
+
+        // $invoiceLine = InvoiceLine::find($id);
+
+        // $article = Article::find($validated['article_id']);
+
+        // $article->quantity -= $invoiceLine->quantity;
+
+        // $invoiceLine->quantity = $validated['quantity'];
+        // $invoiceLine->update();
+
+        // $article->update();
+
+        // $article->quantity += $validated['quantity'];
+
+        // $article->update();
+
+        // return response()->json([
+        //     'message' => 'Invoice successfully updated',
+        //     'invoice' => $invoice,
+        //     'invoice_lines' => $invoice->invoiceLines,
+        // ], 201);
+
+
+        // Validation des données du formulaire
+        $validated = $request->validate([
+            'article_id' => 'required|integer|exists:articles,id', // Vérifie si l'article existe
+            'quantity' => 'required|integer|min:1', // La quantité doit être un entier et >= 1
+        ]);
+
+        // Récupérer la ligne de facture (InvoiceLine)
+        $invoiceLine = InvoiceLine::find($id);
+
+        // Vérifier si la ligne de facture existe
+        if (!$invoiceLine) {
+            return response()->json([
+                'error' => 'Invoice line not found',
+            ], 404);
+        }
+
+        // Récupérer l'article à partir de l'ID
+        $article = Article::find($validated['article_id']);
+
+        // Vérifier si l'article existe
+        if (!$article) {
+            return response()->json([
+                'error' => 'Article not found',
+            ], 404);
+        }
+
+        // Gestion de l'inventaire de l'article : décrémente la quantité précédente
+        $article->quantity += $invoiceLine->quantity; // Restaure la quantité d'avant
+        $article->quantity -= $validated['quantity']; // Décrémente de la nouvelle quantité
+
+        // Mise à jour de la ligne de facture avec la nouvelle quantité
+        $invoiceLine->quantity = $validated['quantity'];
+
+        // Démarrer la transaction pour garantir que les deux mises à jour se font ensemble
+        try {
+            \DB::beginTransaction();
+
+            // Sauvegarder les modifications
+            $invoiceLine->save();
+            $article->save();
+
+            // Confirmer la transaction
+            \DB::commit();
+
+            return response()->json([
+                'message' => 'Invoice successfully updated',
+                'invoice_line' => $invoiceLine,
+                'article' => $article,
+            ], 200);
+        } catch (\Exception $e) {
+            // Annuler la transaction en cas d'erreur
+            \DB::rollBack();
+
+            // Log l'erreur pour le débogage
+            \Log::error('Error updating invoice: ' . $e->getMessage());
+
+            return response()->json([
+                'error' => 'There was an error while updating the invoice. Please try again later.',
+            ], 500);
+        }
+
+
     }
 
     public function deleteInvoice($id)

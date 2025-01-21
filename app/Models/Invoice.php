@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Invoice extends Model
 {
     //
-
-    protected $fillable = ['invoice_date', 'total_excl_tax', 'vat', 'total_incl_tax', 'invoice_number'];
+    
+    
+    protected $fillable = ['invoice_date','paymentmode_id', 'client_name', 'total_excl_tax', 'vat', 'total_incl_tax', 'invoice_number'];
 
     public function invoiceLines()
     {

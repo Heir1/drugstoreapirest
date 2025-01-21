@@ -69,6 +69,7 @@ class MovementController extends Controller
                     'selling_price' => 'required|integer',
                     'expiration_date' => 'required|string',
                 ]);
+                
         
                 // $movement = Movement::create($validated);
         
@@ -148,6 +149,7 @@ class MovementController extends Controller
      */
     public function update(Request $request, $id)
     {
+
         $movement = Movement::find($id);
 
         if (!$movement) {
@@ -159,41 +161,47 @@ class MovementController extends Controller
             'quantity' => 'nullable|integer',
             'movement_type_id' => 'nullable|exists:movement_types,id',
             'movement_date' => 'nullable|date',
-            'reference' => 'nullable|string|max:100',
+            // 'reference' => 'nullable|string|max:100',
         ]);
-
 
         // Réinitialiser le stock avant mise à jour
         $article = Article::find($movement->article_id);
         $oldQuantity = $movement->quantity;
-        $oldMovementType = $movement->movementType->name;
+        // $oldMovementType = $movement->movementType->id;
 
-        if ($oldMovementType === 'Entée') {
-            $article->quantity -= $oldQuantity;
-        } elseif ($oldMovementType === 'Sortie') {
-            $article->quantity += $oldQuantity;
-        }
+        // if ($oldMovementType === 1) {
+        $article->quantity -= $oldQuantity;
+        $article->update();
+        // } 
+        
+        // elseif ($oldMovementType === 'Sortie') {
+        //     $article->quantity += $oldQuantity;
+        // }
 
         // Mettre à jour le mouvement
         $movement->update($validated);
 
-        // Recalculer le stock après mise à jour
+        // // Recalculer le stock après mise à jour
         $article = Article::find($movement->article_id);
         $newQuantity = $movement->quantity;
-        $newMovementType = $movement->movementType->name;
+        $newMovementType = $movement->movementType->id;
 
-        if ($newMovementType === 'Entée') {
-            $article->quantity += $newQuantity;
-        } elseif ($newMovementType === 'Sortie') {
-            if ($article->quantity < $newQuantity) {
-                return response()->json([
-                    'error' => 'Not enough stock for this operation.'
-                ], 400);
-            }
-            $article->quantity -= $newQuantity;
-        } elseif ($newMovementType === 'adjustment') {
-            $article->quantity = $newQuantity;
-        }
+        // return $movement;
+
+        // if ($newMovementType === 1) {
+        $article->quantity += $newQuantity;
+        // }       
+        
+        // elseif ($newMovementType === 'Sortie') {
+        //     if ($article->quantity < $newQuantity) {
+        //         return response()->json([
+        //             'error' => 'Not enough stock for this operation.'
+        //         ], 400);
+        //     }
+        //     $article->quantity -= $newQuantity;
+        // } elseif ($newMovementType === 'adjustment') {
+        //     $article->quantity = $newQuantity;
+        // }
 
         $article->save();
 
@@ -201,6 +209,7 @@ class MovementController extends Controller
             'message' => 'Movement updated successfully.',
             'movement' => $movement,
         ], 200);
+
     }
 
     /**
@@ -208,6 +217,7 @@ class MovementController extends Controller
      */
     public function destroy($id)
     {
+
         $movement = Movement::find($id);
 
         if (!$movement) {
@@ -215,14 +225,17 @@ class MovementController extends Controller
         }
 
         // Réinitialiser le stock avant suppression
-        $article = Article::find($movement->article_id);
-        $movementType = $movement->movementType->name;
 
-        if ($movementType === 'entry') {
-            $article->quantity -= $movement->quantity;
-        } elseif ($movementType === 'exit') {
-            $article->quantity += $movement->quantity;
-        }
+        $article = Article::find($movement->article_id);
+        // $movementType = $movement->movementType->id;
+
+        // if ($movementType === 1) {
+
+        $article->quantity -= $movement->quantity;
+
+        // } elseif ($movementType === 2) {
+        //     $article->quantity += $movement->quantity;
+        // }
 
         $article->save();
 

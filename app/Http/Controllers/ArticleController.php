@@ -121,6 +121,7 @@ class ArticleController extends Controller
                 $movement->movement_type_id = 1;
                 $movement->movement_date = "2025-01-04";
                 $movement->reference = Str::uuid();
+                $movement->old_article_stock = 0;
     
                 $movement->save();
             }
