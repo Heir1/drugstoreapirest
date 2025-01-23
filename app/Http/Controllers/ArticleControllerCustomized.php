@@ -14,6 +14,7 @@ use App\Models\Indication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Http\Response;
+use Carbon\Carbon;
 
 class ArticleControllerCustomized extends Controller
 {
@@ -131,4 +132,45 @@ class ArticleControllerCustomized extends Controller
         }
     }
 
+    public function getLowStockArticles()
+    {
+        // Récupérer les articles avec un stock inférieur ou égal au seuil d'alerte
+        $lowStockArticles = Article::whereColumn('quantity', '<=', 'alert')->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+
+        // Vérifier si des articles ont été trouvés
+        if ($lowStockArticles->isEmpty()) {
+            return response()->json(['message' => 'Aucun article avec un stock en alerte'], Response::HTTP_OK);
+        }
+
+        return response()->json($lowStockArticles, Response::HTTP_OK);
+    }
+
+    public function getExpiredArticles()
+    {
+        // Obtenir la date d'aujourd'hui
+        $today = Carbon::today();
+
+        // Récupérer les articles expirés
+        $expiredArticles = Article::where('expiration_date', '<', $today)->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+
+        // Vérifier si des articles ont été trouvés
+        if ($expiredArticles->isEmpty()) {
+            return response()->json(['message' => 'Aucun article expiré trouvé'], Response::HTTP_OK);
+        }
+
+        return response()->json($expiredArticles, Response::HTTP_OK);
+    }
+
 }
+
+
+$articles = Article::with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+
+$articles->each(function ($article) {
+    $article->placements->makeHidden('pivot');
+    $article->molecules->makeHidden('pivot');
+    $article->suppliers->makeHidden('pivot');
+    $article->indications->makeHidden('pivot');
+});
+
+return response()->json($articles);

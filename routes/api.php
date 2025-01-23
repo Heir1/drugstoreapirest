@@ -43,6 +43,8 @@ Route::apiResource('packagings', PackagingController::class);
 
 // getAllArticles ArticleControllerCustomized
 Route::get('articles', [ArticleControllerCustomized::class, 'getAllArticles']);
+Route::get('lowstockarticles', [ArticleControllerCustomized::class, 'getLowStockArticles']);
+Route::get('expirederticles', [ArticleControllerCustomized::class, 'getExpiredArticles']);
 Route::put('articles/{id}', [ArticleControllerCustomized::class, 'updateArticle']);
 
 // Exemple de route personnalisée pour un article spécifique

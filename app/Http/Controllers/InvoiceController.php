@@ -167,7 +167,6 @@ class InvoiceController extends Controller
 
     public function updateInvoice(Request $request, $id){
 
-
         // $validated = $request->validate([
         //     'article_id' => 'required|integer',
         //     'id' => 'required|integer',
@@ -228,6 +227,7 @@ class InvoiceController extends Controller
 
         // Mise à jour de la ligne de facture avec la nouvelle quantité
         $invoiceLine->quantity = $validated['quantity'];
+        $invoiceLine->subtotal = $validated['quantity']*$invoiceLine->unit_price;
 
         // Démarrer la transaction pour garantir que les deux mises à jour se font ensemble
         try {
@@ -245,6 +245,7 @@ class InvoiceController extends Controller
                 'invoice_line' => $invoiceLine,
                 'article' => $article,
             ], 200);
+
         } catch (\Exception $e) {
             // Annuler la transaction en cas d'erreur
             \DB::rollBack();
@@ -262,12 +263,64 @@ class InvoiceController extends Controller
 
     public function deleteInvoice($id)
     {
-        // Supprimer l'article
-        $invoice = Invoice::find($id);
 
-        $invoice->delete();
+        // $invoiceLine = InvoiceLine::find($id);
 
-        return response()->json(null, Response::HTTP_NO_CONTENT);
-    }
+        // // Récupérer l'article à partir de l'ID
+
+        // $article = Article::find($invoiceLine->article_id);
+        // $article->quantity += $invoiceLine->quantity; // Restaure la quantité d'avant
+
+        // $article->save();
+        // $invoiceLine->delete();
+
+        // return response()->json(null, Response::HTTP_NO_CONTENT);
+
+
+        // Utiliser une transaction pour garantir la cohérence des données
+        
+        DB::beginTransaction();
+
+        try {
+            // Récupérer la ligne de facture
+            $invoiceLine = InvoiceLine::find($id);
+
+            // Vérifier si la ligne de facture existe
+            if (!$invoiceLine) {
+                return response()->json(['error' => 'Invoice line not found'], Response::HTTP_NOT_FOUND);
+            }
+
+            // Récupérer l'article associé
+            $article = Article::find($invoiceLine->article_id);
+
+            // Vérifier si l'article existe
+            if (!$article) {
+                return response()->json(['error' => 'Article not found'], Response::HTTP_NOT_FOUND);
+            }
+
+            // Restaurer la quantité de l'article
+            $article->quantity += $invoiceLine->quantity;
+            $article->save();
+
+            // Supprimer la ligne de facture
+            $invoiceLine->delete();
+
+            // Commit de la transaction
+            DB::commit();
+
+            // Retourner une réponse HTTP 204 (No Content)
+            return response()->json(null, Response::HTTP_NO_CONTENT);
+        } catch (\Exception $e) {
+            // Rollback de la transaction en cas d'erreur
+            DB::rollBack();
+
+            // Retourner une réponse avec une erreur
+            return response()->json([
+                'error' => 'An error occurred while deleting the invoice line',
+                'details' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        }
     
 }
