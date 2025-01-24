@@ -135,7 +135,7 @@ class ArticleControllerCustomized extends Controller
     public function getLowStockArticles()
     {
         // Récupérer les articles avec un stock inférieur ou égal au seuil d'alerte
-        $lowStockArticles = Article::whereColumn('quantity', '<=', 'alert')->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+        $lowStockArticles = Article::whereColumn('quantity', '<=', 'alert')->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->orderBy('updated_at', 'desc')->get();
 
         // Vérifier si des articles ont été trouvés
         if ($lowStockArticles->isEmpty()) {
