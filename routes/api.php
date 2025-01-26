@@ -81,6 +81,7 @@ Route::put('articles/{id}', [ArticleControllerCustomized::class, 'updateArticle'
 // Routes la création de facture InvoiceController
 // Route::get('/invoices/mode/{paymentmodeid}/{firstrange}/{secondrange}', [InvoiceController::class, 'getAllInvoices']);
 Route::get('/invoices/mode/{paymentmodeid}/{firstrange}/{secondrange}', [InvoiceController::class, 'getAllInvoices']);
+Route::get('/invoicenumber', [InvoiceController::class, 'getInvoiceNumber']);
 Route::post('/invoices', [InvoiceController::class, 'createInvoice']);
 Route::put('/invoices/{id}', [InvoiceController::class, 'updateInvoice']);
 Route::delete('/invoices/{id}', [InvoiceController::class, 'deleteInvoice']);

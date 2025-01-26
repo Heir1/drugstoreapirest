@@ -164,7 +164,6 @@ class InvoiceController extends Controller
         }
     }
 
-
     public function updateInvoice(Request $request, $id){
 
         // $validated = $request->validate([
@@ -321,6 +320,30 @@ class InvoiceController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
+    }
+
+    public function getInvoiceNumber()
+    {
+        try {
+            // Générer un numéro de facture unique
+            $invoiceNumber = Invoice::generateInvoiceNumber();
+    
+            // Retourner une réponse JSON standardisée
+            return response()->json([
+                'success' => true,
+                'message' => 'Invoice number generated successfully.',
+                'data' => $invoiceNumber,
+            ], 200);
+    
+        } catch (\Exception $e) {
+            // Gérer les erreurs en retournant une réponse JSON d'erreur
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate invoice number.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
+    }
+    
     
 }
