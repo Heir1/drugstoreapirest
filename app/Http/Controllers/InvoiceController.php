@@ -164,101 +164,74 @@ class InvoiceController extends Controller
         }
     }
 
-    public function updateInvoice(Request $request, $id){
-
-        // $validated = $request->validate([
-        //     'article_id' => 'required|integer',
-        //     'id' => 'required|integer',
-        //     'quantity' => 'required|integer'
-        // ]);
-
-        // $invoiceLine = InvoiceLine::find($id);
-
-        // $article = Article::find($validated['article_id']);
-
-        // $article->quantity -= $invoiceLine->quantity;
-
-        // $invoiceLine->quantity = $validated['quantity'];
-        // $invoiceLine->update();
-
-        // $article->update();
-
-        // $article->quantity += $validated['quantity'];
-
-        // $article->update();
-
-        // return response()->json([
-        //     'message' => 'Invoice successfully updated',
-        //     'invoice' => $invoice,
-        //     'invoice_lines' => $invoice->invoiceLines,
-        // ], 201);
-
-
+    public function updateInvoice(Request $request, $id)
+    {
         // Validation des données du formulaire
         $validated = $request->validate([
             'article_id' => 'required|integer|exists:articles,id', // Vérifie si l'article existe
             'quantity' => 'required|integer|min:1', // La quantité doit être un entier et >= 1
         ]);
-
+    
         // Récupérer la ligne de facture (InvoiceLine)
-        $invoiceLine = InvoiceLine::find($id);
-
+        $invoiceLine = InvoiceLine::with(['invoices', 'articles'])->find($id);
+    
         // Vérifier si la ligne de facture existe
         if (!$invoiceLine) {
             return response()->json([
                 'error' => 'Invoice line not found',
             ], 404);
         }
-
+    
         // Récupérer l'article à partir de l'ID
         $article = Article::find($validated['article_id']);
-
+    
         // Vérifier si l'article existe
         if (!$article) {
             return response()->json([
                 'error' => 'Article not found',
             ], 404);
         }
-
+    
         // Gestion de l'inventaire de l'article : décrémente la quantité précédente
         $article->quantity += $invoiceLine->quantity; // Restaure la quantité d'avant
         $article->quantity -= $validated['quantity']; // Décrémente de la nouvelle quantité
-
+    
         // Mise à jour de la ligne de facture avec la nouvelle quantité
         $invoiceLine->quantity = $validated['quantity'];
-        $invoiceLine->subtotal = $validated['quantity']*$invoiceLine->unit_price;
-
+        $invoiceLine->subtotal = $validated['quantity'] * $invoiceLine->unit_price;
+    
         // Démarrer la transaction pour garantir que les deux mises à jour se font ensemble
         try {
             \DB::beginTransaction();
-
+    
             // Sauvegarder les modifications
             $invoiceLine->save();
             $article->save();
-
+    
+            // Recharger les relations pour inclure les dernières modifications
+            $invoiceLine->load(['invoices', 'articles']);
+    
             // Confirmer la transaction
             \DB::commit();
-
+    
             return response()->json([
                 'message' => 'Invoice successfully updated',
-                'invoice_line' => $invoiceLine,
-                'article' => $article,
+                ...$invoiceLine->toArray(),
             ], 200);
-
+    
         } catch (\Exception $e) {
             // Annuler la transaction en cas d'erreur
             \DB::rollBack();
-
+    
             // Log l'erreur pour le débogage
             \Log::error('Error updating invoice: ' . $e->getMessage());
-
+    
             return response()->json([
                 'error' => 'There was an error while updating the invoice. Please try again later.',
             ], 500);
         }
-
-
     }
+    
 
     public function deleteInvoice($id)
     {
