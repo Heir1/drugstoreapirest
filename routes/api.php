@@ -15,8 +15,10 @@ use App\Http\Controllers\MovementController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\RateController;
 use App\Http\Controllers\PaymentModeController;
+use App\Http\Controllers\AuthController;
 
 // Routes pour les Articles
+
 
 Route::apiResource('articles', ArticleController::class);
 
@@ -42,6 +44,7 @@ Route::apiResource('suppliers', SupplierController::class);
 Route::apiResource('packagings', PackagingController::class);
 
 // getAllArticles ArticleControllerCustomized
+
 Route::get('articles', [ArticleControllerCustomized::class, 'getAllArticles']);
 Route::get('lowstockarticles', [ArticleControllerCustomized::class, 'getLowStockArticles']);
 Route::get('expirederticles', [ArticleControllerCustomized::class, 'getExpiredArticles']);
@@ -91,3 +94,14 @@ Route::apiResource('rates', RateController::class);
 
 
 Route::resource('payment-modes', PaymentModeController::class);
+
+
+// Connexion et deconnexion
+Route::post('/login', [AuthController::class, 'login'])->name('login');
+// Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::post('/logout', [AuthController::class, 'logout']);
+Route::post('register', [AuthController::class, 'register']);
+Route::get('users', [AuthController::class, 'getAll']);
+Route::get('users/{id}', [AuthController::class, 'getById']);
+Route::put('users/{id}', [AuthController::class, 'update']);
+Route::delete('users/{id}', [AuthController::class, 'delete']);

@@ -17,6 +17,12 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+
+    // use HasApiTokens;
+
+    const ROLE_ADMIN = 'admin';
+    const ROLE_USER = 'user';
+
     protected $fillable = [
         'name',
         'email',
@@ -45,4 +51,17 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+
+    // Vérifier le rôle
+    public function isAdmin()
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isUser()
+    {
+        return $this->role === self::ROLE_USER;
+    }
+
 }
