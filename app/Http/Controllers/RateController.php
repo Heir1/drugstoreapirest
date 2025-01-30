@@ -62,15 +62,18 @@ class RateController extends Controller
      */
     public function update(Request $request, Rate $rate)
     {
-        //
-
+        // Validation des données entrantes
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'value' => 'sometimes|required|numeric',
         ]);
-
+    
+        // Mise à jour du taux avec les nouvelles données
         $rate->update($validated);
-
+    
+        // Forcer la mise à jour du timestamp `updated_at`
+        $rate->touch();
+    
         return response()->json($rate);
     }
 
