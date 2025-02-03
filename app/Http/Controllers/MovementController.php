@@ -205,10 +205,14 @@ class MovementController extends Controller
 
         $article->save();
 
-        return response()->json([
-            'message' => 'Movement updated successfully.',
-            'movement' => $movement,
-        ], 200);
+        // return response()->json([
+        //     'message' => 'Movement updated successfully.',
+        //     'movement' => $movement,
+        // ], 200);
+
+        $movement->load(['article']);
+
+        return response()->json( $movement, Response::HTTP_OK);
 
     }
 

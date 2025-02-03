@@ -84,14 +84,14 @@ class ArticleController extends Controller
             // Vérification de l'existence d'un article avec le même barcode
             if (Article::where('barcode', $validated['barcode'])->exists()) {
                 return response()->json([
-                    'message' => 'Un article avec ce code-barres existe déjà.'
+                    'message' => 'Ce code-barre existe déjà.'
                 ], Response::HTTP_CONFLICT); // Code 409 pour conflit
             }
 
             // Vérification de l'existence d'un article avec la même description
             if (Article::where('description', $validated['description'])->exists()) {
                 return response()->json([
-                    'message' => 'Un article avec cette description existe déjà.'
+                    'message' => 'Cet article existe déjà.'
                 ], Response::HTTP_CONFLICT); // Code 409 pour conflit
             }
 
@@ -177,25 +177,25 @@ class ArticleController extends Controller
 
         try {
 
-            // Validation des données d'entrée
-            $validated = $request->validate([
-                'barcode' => 'required|string',
-                'description' => 'required|string',
-                'quantity' => 'required|integer',
-                'purchase_price' => 'required|numeric',
-                'selling_price' => 'required|numeric',
-                'currency_id' => 'nullable|exists:currencies,id',
-                'category_id' => 'nullable|exists:categories,id',
-                'packaging_id' => 'nullable|exists:packagings,id',
-                'alert' => 'nullable|integer',
-                'is_active' => 'nullable|boolean',
-                'expiration_date' => 'nullable|date',
-                'comment' => 'nullable|string',
-                'placements' => 'nullable|array',
-                'molecules' => 'nullable|array',
-                'suppliers' => 'nullable|array',
-                'indications' => 'nullable|array',
-            ]);
+                // Validation des données d'entrée
+                $validated = $request->validate([
+                    'barcode' => 'required|string',
+                    'description' => 'required|string',
+                    'quantity' => 'required|integer',
+                    'purchase_price' => 'required|numeric',
+                    'selling_price' => 'required|numeric',
+                    'currency_id' => 'nullable|exists:currencies,id',
+                    'category_id' => 'nullable|exists:categories,id',
+                    'packaging_id' => 'nullable|exists:packagings,id',
+                    'alert' => 'nullable|integer',
+                    'is_active' => 'nullable|boolean',
+                    'expiration_date' => 'nullable|date',
+                    'comment' => 'nullable|string',
+                    'placements' => 'nullable|array',
+                    'molecules' => 'nullable|array',
+                    'suppliers' => 'nullable|array',
+                    'indications' => 'nullable|array',
+                ]);
 
 
             // Vérification de l'existence d'un article avec le même barcode
