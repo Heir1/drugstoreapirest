@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Movement;
+use App\Models\MovementType;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\Invoice;
+
 
 class MovementController extends Controller
 {
@@ -58,69 +63,91 @@ class MovementController extends Controller
     public function store(Request $request)
     {
 
-        try {
-            //code...
-                $validated = $request->validate([
-                    'article_id' => 'required|exists:articles,id',
-                    'quantity' => 'required|integer',
-                    'movement_type_id' => 'required|exists:movement_types,id',
-                    'reference' => 'nullable|string|max:100',
-                    'purchase_price' => 'required|integer',
-                    'selling_price' => 'required|integer',
-                    'expiration_date' => 'required|string',
-                ]);
-                
-        
-                // $movement = Movement::create($validated);
-        
-                $article = Article::find($validated['article_id']);
-        
-        
-                if($article->purchase_price !==  $validated['purchase_price']){
-                    $article->purchase_price = $validated['purchase_price'];
-                    $article->selling_price = $validated['selling_price']; 
-                }
+        DB::beginTransaction();
 
-                if($article->expiration_date !==  $validated['expiration_date']){
-                    $article->expiration_date = $validated['expiration_date'];
-                }
-        
-                $movement = new Movement();
-                $movement->article_id = $validated['article_id'];
-                $movement->quantity = $validated['quantity'];
-                $movement->movement_type_id = $validated['movement_type_id'];
-                $movement->reference = $validated['reference'];
-                $movement->old_article_stock = $article->quantity;
-        
-                $movement->save();
-        
-                // Mettre à jour la quantité en stock
-                $movementType = $movement->movementType->name;
-        
-                if ($movementType === 'Entree') {
-                    $article->quantity += $validated['quantity'];
-                } elseif ($movementType === 'Sortie') {
-                    if ($article->quantity < $validated['quantity']) {
+        try {
+                //code...
+                $validated = $request->validate([
+                    'movement_type_id' => 'required|exists:movement_types,id',
+                    'articles' => 'required|array',
+                ]);
+
+                $lastMovement = null;
+
+                foreach ($validated['articles'] as $articleData) {
+
+                    $newUuid = Str::uuid();
+                    $article = Article::find($articleData['id']);
+    
+            
+                    if (!$article) {
                         return response()->json([
-                            'error' => 'La quantité est saisie est supérieure au stock disponible .'
-                        ], 400);
+                            'error' => "L'article avec l'ID {$articleData['id']} n'existe pas."
+                        ], 404);
                     }
-                    $article->quantity -= $validated['quantity'];
-                } elseif ($movementType === 'Ajustment') {
-                    $article->quantity = $validated['quantity'];
+                    
+            
+                    // Mise à jour des prix et de la date d'expiration
+                    if ($article->purchase_price !== $articleData['purchase_price']) {
+                        $article->purchase_price = $articleData['purchase_price'];
+                        $article->selling_price = $articleData['selling_price'];
+                    }
+    
+                    if ($article->expiration_date !== $articleData['expirationDate']) {
+                        $article->expiration_date = $articleData['expirationDate'];
+                    }
+    
+                    // Création du mouvement
+                    $movement = new Movement();
+                    $movement->article_id = $article->id;
+                    $movement->quantity = $articleData['quantityappro'];
+                    $movement->movement_type_id = $validated['movement_type_id'];
+                    $movement->reference = "REF-" . $newUuid;
+                    $movement->old_article_stock = $article->quantity;
+                    $movement->save();
+            
+                    // // Mise à jour du stock selon le type de mouvement
+                    $movementType = MovementType::find($validated['movement_type_id']);
+    
+                    if ($movementType) {
+                        if ($movementType->name === 'Entree') {
+                            $article->quantity += $articleData['quantityappro'];
+                        } elseif ($movementType->name === 'Sortie') {
+                            if ($article->quantity < $articleData['quantityappro']) {
+                                return response()->json([
+                                    'error' => 'La quantité saisie est supérieure au stock disponible.'
+                                ], 400);
+                            }
+                            $article->quantity -= $articleData['quantityappro'];
+                        } elseif ($movementType->name === 'Ajustment') {
+                            $article->quantity = $articleData['quantityappro'];
+                        }
+                    }
+    
+                    $article->save();
+
+                    // Stocker le dernier mouvement
+                    $lastMovement = $movement;
+
+                }
+                
+                DB::commit();
+
+                if ($lastMovement) {
+                    $lastMovement->load(['article.placements', 'article.suppliers']);
+                    return response()->json($lastMovement, Response::HTTP_CREATED);
                 }
         
-                $article->save();
-        
-                $movement->load(['article.placements', 'article.suppliers']);
-        
-                return response()->json($movement, Response::HTTP_CREATED);
+                return response()->json(['message' => 'Aucun mouvement enregistré.'], 400);
+
             } catch (ValidationException $e) {
+                DB::rollBack();
                 // Si une erreur de validation se produit, on renvoie une réponse avec le message d'erreur
                 return response()->json([
                     'error' => $e->errors()
                 ], Response::HTTP_UNPROCESSABLE_ENTITY); // Code 422 pour une erreur de validation
             } catch (\Exception $e) {
+                DB::rollBack();
                 // Gérer les erreurs générales et renvoyer une réponse appropriée
                 return response()->json([
                     'error' => 'Une erreur interne est survenue. Veuillez réessayer plus tard.',

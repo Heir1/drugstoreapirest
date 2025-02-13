@@ -164,13 +164,13 @@ class ArticleControllerCustomized extends Controller
 }
 
 
-$articles = Article::with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+// $articles = Article::with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
 
-$articles->each(function ($article) {
-    $article->placements->makeHidden('pivot');
-    $article->molecules->makeHidden('pivot');
-    $article->suppliers->makeHidden('pivot');
-    $article->indications->makeHidden('pivot');
-});
+// $articles->each(function ($article) {
+//     $article->placements->makeHidden('pivot');
+//     $article->molecules->makeHidden('pivot');
+//     $article->suppliers->makeHidden('pivot');
+//     $article->indications->makeHidden('pivot');
+// });
 
-return response()->json($articles);
+// return response()->json($articles);

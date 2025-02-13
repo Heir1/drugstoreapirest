@@ -84,20 +84,20 @@ class AuthController extends Controller
             ]);
 
 
-            return $validatedData;
+            // return $validatedData;
     
             // Normalisation des entrées
-            // $validatedData['email'] = strtolower(trim($validatedData['email']));
-            // $validatedData['password'] = bcrypt($validatedData['password']);
+            $validatedData['email'] = strtolower(trim($validatedData['email']));
+            $validatedData['password'] = bcrypt($validatedData['password']);
     
             // // Création de l'utilisateur
-            // $user = User::create($validatedData);
+            $user = User::create($validatedData);
     
-            // // Retour de la réponse (sans password ni updated_at)
-            // return response()->json([
-            //     'message' => 'Utilisateur créé avec succès.',
-            //     'user' => $user->only(['id', 'name', 'email', 'role', 'created_at']),
-            // ], 201);
+            // Retour de la réponse (sans password ni updated_at)
+            return response()->json([
+                'message' => 'Utilisateur créé avec succès.',
+                'user' => $user->only(['id', 'name', 'email', 'role', 'created_at']),
+            ], 201);
     
         } catch (\Exception $e) {
             return response()->json([
