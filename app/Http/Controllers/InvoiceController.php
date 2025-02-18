@@ -19,94 +19,233 @@ class InvoiceController extends Controller
 
 {
     
-    public function getAllInvoices($mode, $firstrange, $secondrange){
+    // public function getAllInvoices($mode, $invoice, $firstrange, $secondrange){
 
-        // $mode, $firstrange, $secondrange
+    //     // $mode, $firstrange, $secondrange
 
-        $firstrange = Carbon::parse($firstrange)->startOfDay();
-        $secondrange = Carbon::parse($secondrange)->endOfDay();
 
-        // // Charger les relations many-to-many avec les autres modèles
+    //     $firstrange = Carbon::parse($firstrange)->startOfDay();
+    //     $secondrange = Carbon::parse($secondrange)->endOfDay();
 
-        // // $invoices = InvoiceLine::with(['invoices', 'articles'])->get();
+    //     // // Charger les relations many-to-many avec les autres modèles
+
+    //     // // $invoices = InvoiceLine::with(['invoices', 'articles'])->get();
         
 
-        $invoices = InvoiceLine::whereBetween('created_at', [$firstrange, $secondrange])->with(['invoices', 'articles'])->whereHas('invoices', function ($query) {
-            $query->where('paymentmode_id', 1);
-        })->get();
+    //     $invoices = InvoiceLine::whereBetween('created_at', [$firstrange, $secondrange])
+    //     ->with(['invoices', 'articles'])
+    //     ->whereHas('invoices', function ($query) use ($mode) { // Pass $mode using 'use'
+    //         $query->where('paymentmode_id', $mode);
+    //     })
+    //     ->get();
         
 
-        // with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+    //     // with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
 
-        // $articles->each(function ($article) {
-        //     $article->placements->makeHidden('pivot');
-        //     $article->molecules->makeHidden('pivot');
-        //     $article->suppliers->makeHidden('pivot');
-        //     $article->indications->makeHidden('pivot');
-        // });
+    //     // $articles->each(function ($article) {
+    //     //     $article->placements->makeHidden('pivot');
+    //     //     $article->molecules->makeHidden('pivot');
+    //     //     $article->suppliers->makeHidden('pivot');
+    //     //     $article->indications->makeHidden('pivot');
+    //     // });
 
+    //     return response()->json($invoices);
+
+    // }
+
+    public function getAllInvoices($mode, $invoice, $firstrange, $secondrange)
+    {
+        // Validation et conversion des dates pour éviter les erreurs
+        try {
+            $firstrange = Carbon::parse($firstrange)->startOfDay();
+            $secondrange = Carbon::parse($secondrange)->endOfDay();
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Invalid date format'], 400);
+        }
+    
+        // Déterminer la valeur de is_proforma selon $invoice
+        $isProforma = ($invoice == 1); // 1 = Proforma (true), 2 = Facture (false)
+
+        // return $isProforma;
+    
+        // Requête optimisée
+        $invoices = InvoiceLine::whereBetween('created_at', [$firstrange, $secondrange])
+            ->with(['invoices', 'articles'])
+            ->whereHas('invoices', function ($query) use ($mode, $isProforma) {
+                $query->where('paymentmode_id', $mode)
+                      ->where('is_proforma', $isProforma);
+            })->get();
+    
         return response()->json($invoices);
-
     }
+
+    
+            // ->with(['invoices:id,invoice_number,paymentmode_id,is_proforma', 'articles:id,name,selling_price']) // Charger seulement les colonnes nécessaires
+
+    // public function createInvoice(Request $request)
+    // {
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // Validate request data
+    //         $validated = $request->validate([
+    //             'client_name'  => 'required|string',
+    //             'invoice' => 'required|integer',
+    //             'paymentmode' => 'required|integer',
+    //             'articles' => 'required|array',
+    //             'articles.*.id' => 'required|exists:articles,id',
+    //             'articles.*.quantity1' => 'required|integer|min:1',
+    //         ]);
+
+    //         // // Generate unique invoice number
+    //         $invoiceNumber = Invoice::generateInvoiceNumber();
+
+
+    //         // return $validated['paymentmode'];
+
+    //         // return $validated;
+
+    //         // Create the invoice
+    //         $invoice = Invoice::create([
+    //             'invoice_date' => now(),
+    //             'invoice_number' => $invoiceNumber,
+    //             'paymentmode_id' => $validated['paymentmode'],
+    //             'client_name' => $validated['client_name']
+    //         ]);
+
+    //         $totalExclTax = 0;
+
+            
+    //         foreach ($validated['articles'] as $articleData) {
+                
+    //             $article = Article::findOrFail($articleData['id']);
+    //             $quantity = $articleData['quantity1'];
+                
+    //             // Check stock availability
+    //             if ($article->quantity < $quantity) {
+    //                 throw new \Exception("Insufficient stock for article ID {$article->id}.");
+    //             }
+                
+    //             $unitPrice = $article->selling_price;
+    //             $subtotal = $quantity * $unitPrice;
+    //             $newUuid = Str::uuid();
+                
+                
+    //             // Record movement
+    //             $movement = Movement::create([
+    //                 'article_id' => $article->id,
+    //                 'quantity' => $quantity,
+    //                 'movement_type_id' => 2, // Sale movement
+    //                 'reference' => "REF-" . $newUuid,
+    //                 'old_article_stock' => $article->quantity,
+    //             ]);
+                
+    //             // Add invoice line
+    //             InvoiceLine::create([
+    //                 'invoice_id' => $invoice->id,
+    //                 'article_id' => $article->id,
+    //                 'quantity' => $quantity,
+    //                 'unit_price' => $unitPrice,
+    //                 'subtotal' => $subtotal,
+    //             ]);
+                
+    //             // Reduce quantity in stock
+    //             $article->update(['quantity' => $article->quantity - $quantity]);
+                
+    //             $totalExclTax += $subtotal;
+    //         }
+    //         // return "Success";
+
+    //         // Calculate VAT and total incl. tax
+    //         $vat = $totalExclTax * 0.16; // 16% VAT
+    //         $totalInclTax = $totalExclTax + $vat;
+
+    //         $invoice->update([
+    //             'total_excl_tax' => $totalExclTax,
+    //             'vat' => $vat,
+    //             'total_incl_tax' => $totalInclTax,
+    //             'paymentmode_id' => $validated['paymentmode']
+    //         ]);
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'message' => 'Invoice successfully created',
+    //             'invoice' => $invoice,
+    //             'invoice_lines' => $invoice->invoiceLines,
+    //         ], 201);
+            
+    //     } catch (ValidationException $e) {
+    //         DB::rollBack();
+
+    //         return response()->json([
+    //             'error' => 'Validation error',
+    //             'details' => $e->errors(),
+    //         ], 422); // Unprocessable Entity
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         // Log the error for debugging purposes
+    //         Log::error('Error creating invoice', [
+    //             'message' => $e->getMessage(),
+    //             'trace' => $e->getTraceAsString(),
+    //         ]);
+
+    //         return response()->json([
+    //             'error' => 'An error occurred while creating the invoice.',
+    //             'message' => $e->getMessage(),
+    //         ], 500); // Internal Server Error
+    //     }
+    // }
 
     public function createInvoice(Request $request)
     {
-
         DB::beginTransaction();
 
         try {
-            // Validate request data
+            // Validation des données
             $validated = $request->validate([
+                'client_name'  => 'required|string',
+                'invoice' => 'required|integer|in:1,2', // 1 = Facture, 2 = Pro forma
                 'paymentmode' => 'required|integer',
                 'articles' => 'required|array',
                 'articles.*.id' => 'required|exists:articles,id',
                 'articles.*.quantity1' => 'required|integer|min:1',
             ]);
 
-            // // Generate unique invoice number
+            // Générer un numéro de facture unique
             $invoiceNumber = Invoice::generateInvoiceNumber();
 
+            // Déterminer s'il s'agit d'une facture ou d'une pro forma
+            $isProforma;
 
-            // return $validated['paymentmode'];
+            $isProforma = $validated['invoice'] == 2;
 
-            // return $validated;
-
-            // Create the invoice
+            // Création de la facture/pro forma
             $invoice = Invoice::create([
                 'invoice_date' => now(),
                 'invoice_number' => $invoiceNumber,
                 'paymentmode_id' => $validated['paymentmode'],
-                'client_name' => "Héritier N'kele"
+                'client_name' => $validated['client_name'],
+                'is_proforma' => $isProforma, // Nouveau champ pour différencier facture/pro forma
             ]);
 
             $totalExclTax = 0;
 
-            
             foreach ($validated['articles'] as $articleData) {
-                
                 $article = Article::findOrFail($articleData['id']);
                 $quantity = $articleData['quantity1'];
-                
-                // Check stock availability
-                if ($article->quantity < $quantity) {
+
+                // Vérification du stock (uniquement pour une facture réelle)
+                if (!$isProforma && $article->quantity < $quantity) {
                     throw new \Exception("Insufficient stock for article ID {$article->id}.");
                 }
-                
+
                 $unitPrice = $article->selling_price;
                 $subtotal = $quantity * $unitPrice;
-                $newUuid = Str::uuid();
-                
-                
-                // Record movement
-                $movement = Movement::create([
-                    'article_id' => $article->id,
-                    'quantity' => $quantity,
-                    'movement_type_id' => 2, // Sale movement
-                    'reference' => "REF-" . $newUuid,
-                    'old_article_stock' => $article->quantity,
-                ]);
-                
-                // Add invoice line
+
+                // Création de la ligne de facture
                 InvoiceLine::create([
                     'invoice_id' => $invoice->id,
                     'article_id' => $article->id,
@@ -114,55 +253,65 @@ class InvoiceController extends Controller
                     'unit_price' => $unitPrice,
                     'subtotal' => $subtotal,
                 ]);
-                
-                // Reduce quantity in stock
-                $article->update(['quantity' => $article->quantity - $quantity]);
-                
+
+                // Si ce n'est pas une pro forma, enregistrer le mouvement et mettre à jour le stock
+                if (!$isProforma) {
+                    $newUuid = Str::uuid();
+
+                    // Enregistrement du mouvement de stock
+                    Movement::create([
+                        'article_id' => $article->id,
+                        'quantity' => $quantity,
+                        'movement_type_id' => 2, // Vente
+                        'reference' => "REF-" . $newUuid,
+                        'old_article_stock' => $article->quantity,
+                    ]);
+
+                    // Mise à jour du stock
+                    $article->update(['quantity' => $article->quantity - $quantity]);
+                }
+
                 $totalExclTax += $subtotal;
             }
-            // return "Success";
 
-            // Calculate VAT and total incl. tax
-            $vat = $totalExclTax * 0.16; // 16% VAT
+            // Calcul de la TVA et du total TTC
+            $vat = $totalExclTax * 0.16; // TVA de 16%
             $totalInclTax = $totalExclTax + $vat;
 
+            // Mise à jour des montants totaux
             $invoice->update([
                 'total_excl_tax' => $totalExclTax,
                 'vat' => $vat,
                 'total_incl_tax' => $totalInclTax,
-                'paymentmode_id' => $validated['paymentmode']
             ]);
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Invoice successfully created',
+                'message' => $isProforma ? 'Pro forma successfully created' : 'Invoice successfully created',
                 'invoice' => $invoice,
                 'invoice_lines' => $invoice->invoiceLines,
             ], 201);
             
         } catch (ValidationException $e) {
             DB::rollBack();
-
             return response()->json([
                 'error' => 'Validation error',
                 'details' => $e->errors(),
-            ], 422); // Unprocessable Entity
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-
-            // Log the error for debugging purposes
             Log::error('Error creating invoice', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-
             return response()->json([
                 'error' => 'An error occurred while creating the invoice.',
                 'message' => $e->getMessage(),
-            ], 500); // Internal Server Error
+            ], 500);
         }
     }
+
 
     public function updateInvoice(Request $request, $id)
     {
@@ -235,27 +384,14 @@ class InvoiceController extends Controller
 
     public function deleteInvoice($id)
     {
-
-        // $invoiceLine = InvoiceLine::find($id);
-
-        // // Récupérer l'article à partir de l'ID
-
-        // $article = Article::find($invoiceLine->article_id);
-        // $article->quantity += $invoiceLine->quantity; // Restaure la quantité d'avant
-
-        // $article->save();
-        // $invoiceLine->delete();
-
-        // return response()->json(null, Response::HTTP_NO_CONTENT);
-
-
-        // Utiliser une transaction pour garantir la cohérence des données
         
         DB::beginTransaction();
 
         try {
             // Récupérer la ligne de facture
             $invoiceLine = InvoiceLine::find($id);
+
+            $invoice = Invoice::find($invoiceLine->invoice_id);
 
             // Vérifier si la ligne de facture existe
             if (!$invoiceLine) {
@@ -270,9 +406,12 @@ class InvoiceController extends Controller
                 return response()->json(['error' => 'Article not found'], Response::HTTP_NOT_FOUND);
             }
 
-            // Restaurer la quantité de l'article
-            $article->quantity += $invoiceLine->quantity;
-            $article->save();
+            if($invoice->is_proforma){
+                // Restaurer la quantité de l'article
+                $article->quantity += $invoiceLine->quantity;
+                $article->save();
+            }
+
 
             // Supprimer la ligne de facture
             $invoiceLine->delete();
