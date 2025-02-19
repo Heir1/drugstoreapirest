@@ -149,9 +149,10 @@ class ArticleControllerCustomized extends Controller
     {
         // Obtenir la date d'aujourd'hui
         $today = Carbon::today();
+        $nearExpiryDate = $today->addDays(90);
 
         // Récupérer les articles expirés
-        $expiredArticles = Article::where('expiration_date', '<', $today)->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+        $expiredArticles = Article::where('expiration_date', '<', $nearExpiryDate)->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
 
         // Vérifier si des articles ont été trouvés
         if ($expiredArticles->isEmpty()) {

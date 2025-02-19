@@ -64,7 +64,7 @@ class InvoiceController extends Controller
         }
     
         // Déterminer la valeur de is_proforma selon $invoice
-        $isProforma = ($invoice == 1); // 1 = Proforma (true), 2 = Facture (false)
+        $isProforma = ($invoice == 2); // 1 = Proforma (true), 2 = Facture (false)
 
         // return $isProforma;
     
