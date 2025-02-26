@@ -71,14 +71,28 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+
         try {
             // Définition des rôles autorisés
+
+            // $rolesAutorises;
+
+            // if($request->role == "user"){
+            //     $rolesAutorises = [User::ROLE_USER];
+            // }
+            // elseif($request->role == "admin"){
+            //     $rolesAutorises = [User::ROLE_ADMIN, User::ROLE_USER];
+            // }
+
             $rolesAutorises = [User::ROLE_ADMIN, User::ROLE_USER];
     
             // Validation des données
             $validatedData = $request->validate([
                 'name' => 'required|string|max:255',
+                'username' => 'required|string|unique:users,username',
                 'email' => 'required|email|unique:users,email',
+                'telephone' => 'string|unique:users,telephone',
+                'address' => 'string:nullable',
                 'password' => 'required|string|min:6|confirmed',
                 'role' => ['required', Rule::in($rolesAutorises)],
             ]);
@@ -94,14 +108,16 @@ class AuthController extends Controller
             $user = User::create($validatedData);
     
             // Retour de la réponse (sans password ni updated_at)
-            return response()->json([
-                'message' => 'Utilisateur créé avec succès.',
-                'user' => $user->only(['id', 'name', 'email', 'role', 'created_at']),
-            ], 201);
+            return response()->json($user);
+            // return response()->json([
+            //     'message' => 'Utilisateur créé avec succès.',
+            //     'user' => $user,
+            //     'user' => $user->only(['id', 'name', 'email', 'role', 'created_at']),
+            // ], 201);
     
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Une erreur est survenue lors de l’inscription.',
+                'message' => $e->getMessage(),
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -149,10 +165,11 @@ class AuthController extends Controller
 
             // Validation des données
             $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email,' . $id,
+                'name' => 'nullable|string|max:255',
+                'username' => 'required|string',
+                'email' => 'nullable|email|unique:users,email,' . $id,
                 'password' => 'nullable|string|min:6|confirmed',
-                'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_USER])],
+                'role' => ['nullable', Rule::in([User::ROLE_ADMIN, User::ROLE_USER])],
             ]);
 
             // Mise à jour des données
@@ -162,14 +179,16 @@ class AuthController extends Controller
                 $user->password = bcrypt($validatedData['password']);
             }
 
-            return response()->json([
-                'message' => 'Utilisateur mis à jour avec succès.',
-                'user' => $user->only(['id', 'name', 'email', 'role', 'updated_at']),
-            ], 200);
+            return response()->json($user);
+
+            // return response()->json([
+            //     'message' => 'Utilisateur mis à jour avec succès.',
+            //     'user' => $user->only(['id', 'name', 'email', 'role', 'updated_at']),
+            // ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Une erreur est survenue lors de la mise à jour.',
+                'message' => $e->getMessage(),
                 'error' => $e->getMessage(),
             ], 500);
         }
