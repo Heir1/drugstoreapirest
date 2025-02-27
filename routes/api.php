@@ -16,6 +16,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\RateController;
 use App\Http\Controllers\PaymentModeController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CashJournalController;
 
 // Routes pour les Articles
 
@@ -105,3 +106,12 @@ Route::get('users', [AuthController::class, 'getAll']);
 Route::get('users/{id}', [AuthController::class, 'getById']);
 Route::put('users/{id}', [AuthController::class, 'update']);
 Route::delete('users/{id}', [AuthController::class, 'delete']);
+
+// journal de caisse
+
+Route::get('cashjournal', [CashJournalController::class, 'index']); // Lister toutes les entrées
+Route::post('cashjournal', [CashJournalController::class, 'store']); // Créer une nouvelle entrée
+Route::get('cashjournal/{id}', [CashJournalController::class, 'show']); // Afficher une entrée spécifique
+Route::put('cashjournal/{id}', [CashJournalController::class, 'update']); // Mettre à jour une entrée
+Route::delete('cashjournal/{id}', [CashJournalController::class, 'destroy']); // Supprimer une entrée
+Route::get('cashjournal/filter-by-date', [CashJournalController::class, 'filterByDate']); // Filtrer par date

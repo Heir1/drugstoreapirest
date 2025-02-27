@@ -34,4 +34,9 @@ class Currency extends Model
     {
         return $this->hasMany(Article::class, 'currency_id');
     }
+
+    public function cashJournals()
+    {
+        return $this->hasMany(CashJournal::class, 'currency_id');
+    }
 }
