@@ -114,4 +114,4 @@ Route::post('cashjournal', [CashJournalController::class, 'store']); // Créer u
 Route::get('cashjournal/{id}', [CashJournalController::class, 'show']); // Afficher une entrée spécifique
 Route::put('cashjournal/{id}', [CashJournalController::class, 'update']); // Mettre à jour une entrée
 Route::delete('cashjournal/{id}', [CashJournalController::class, 'destroy']); // Supprimer une entrée
-Route::get('cashjournal/filter-by-date', [CashJournalController::class, 'filterByDate']); // Filtrer par date
+Route::get('cashjournal/filter-by-date/{startdate}/{enddate}', [CashJournalController::class, 'filterByDate']); // Filtrer par date

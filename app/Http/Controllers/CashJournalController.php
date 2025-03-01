@@ -145,22 +145,20 @@ class CashJournalController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function filterByDate(Request $request)
+    public function filterByDate(Request $request, $startdate, $enddate)
     {
-        // Validation de la date
-        $validator = Validator::make($request->all(), [
-            'date' => 'required|date',
-        ]);
 
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
+        // Construire la requête de base
+        $query = CashJournal::with(['currency', 'createdBy', 'updatedBy']);
 
-        $date = $request->query('date');
-        $cashJournals = CashJournal::whereDate('created_at', $date)
-            ->with(['currency', 'createdBy', 'updatedBy'])
-            ->get();
+        $enddateInclusive = date('Y-m-d', strtotime($enddate . ' +1 day'));
+        // Appliquer le filtre par plage de dates
+        $query->whereBetween('created_at', [$startdate, $enddateInclusive]);
 
-        return response()->json(['data' => $cashJournals], 200);
+        // Exécuter la requête et récupérer les résultats
+        $cashJournals = $query->get();
+
+        // Retourner la réponse JSON
+        return response()->json($cashJournals, 200);
     }
 }
