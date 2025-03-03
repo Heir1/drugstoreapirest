@@ -39,28 +39,50 @@ class CashJournalController extends Controller
      */
     public function store(Request $request)
     {
-        // Validation des données
-        $validator = Validator::make($request->all(), [
-            'transaction_type' => 'required|in:income,expense',
-            'amount' => 'required|numeric|min:0',
-            'description' => 'nullable|string',
-            'currency_id' => 'required|exists:currencies,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
+        try {
+            // Validation des données
+            $validator = Validator::make($request->all(), [
+                'transaction_type' => 'required|in:income,expense',
+                'amount' => 'required|numeric|min:0',
+                'description' => 'nullable|string',
+                'currency_id' => 'required|exists:currencies,id',
+                'transaction_date' => 'required|date',
+            ]);
+    
+            // Si la validation échoue, retourner les erreurs
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+    
+            // Création de l'entrée
+            $cashJournal = CashJournal::create([
+                'transaction_type' => $request->transaction_type,
+                'amount' => $request->amount,
+                'description' => $request->description,
+                'currency_id' => $request->currency_id,
+                'created_by' => Auth::check() ? Auth::id() : null, // ID de l'utilisateur connecté (ou null si non connecté)
+                'transaction_date' => $request->transaction_date,
+            ]);
+    
+            // Retourner la réponse JSON avec succès
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction créée avec succès',
+                'data' => $cashJournal,
+            ], 201);
+    
+        } catch (Exception $e) {
+            // Gestion des erreurs inattendues
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de la création de la transaction',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        // Création de l'entrée
-        $cashJournal = CashJournal::create([
-            'transaction_type' => $request->transaction_type,
-            'amount' => $request->amount,
-            'description' => $request->description,
-            'currency_id' => $request->currency_id,
-            'created_by' => Auth::check() ? Auth::id() : null, // ID de l'utilisateur connecté (ou null si non connecté)
-        ]);
-
-        return response()->json($cashJournal, 201);
     }
 
     /**
@@ -117,7 +139,9 @@ class CashJournalController extends Controller
             'updated_by' => Auth::check() ? Auth::id() : null // ID de l'utilisateur connecté
         ]);
 
-        return response()->json(['data' => $cashJournal], 200);
+        $cashJournal = CashJournal::with(['currency', 'createdBy', 'updatedBy'])->find($id);
+
+        return response()->json($cashJournal, 200);
     }
 
     /**

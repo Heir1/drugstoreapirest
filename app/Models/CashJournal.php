@@ -21,6 +21,7 @@ class CashJournal extends Model
         'currency_id', // Clé étrangère vers la table des devises
         'created_by', // ID de l'utilisateur qui a créé l'entrée
         'updated_by', // ID de l'utilisateur qui a mis à jour l'entrée
+        'transaction_date',
     ];
 
     /**
