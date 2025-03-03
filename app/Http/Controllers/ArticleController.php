@@ -79,8 +79,10 @@ class ArticleController extends Controller
             'placements' => 'nullable',
             'molecules' => 'nullable',
             'suppliers' => 'nullable',
-            'indications' => 'nullable'
+            'indications' => 'nullable',
+            'created_by' => 'nullable',
             ]);
+
      
             // Vérification de l'existence d'un article avec le même barcode ou description
             if (Article::where('barcode', $validated['barcode'])->exists() ||
@@ -105,7 +107,7 @@ class ArticleController extends Controller
                 'category_id' => $category_id,
                 'packaging_id' => $packaging_id,
                 'row_id' => Str::uuid(),
-                'created_by' => auth()->id(),
+                'created_by' => $validated['created_by'],
             ]));
      
             // Enregistrement du mouvement si la quantité est > 0

@@ -26,11 +26,7 @@ class AuthController extends Controller
 
             // Vérification du rôle
             if ($user->role === 'admin') {
-                return response()->json([
-                    'message' => 'Connexion réussie',
-                    'user' => $user,
-                    // 'token' => $user->createToken('admin-token')->plainTextToken // Si API
-                ], 200);
+                return response()->json($user, 200);
             } elseif ($user->role === 'agent') {
                 return response()->json([
                     'message' => 'Bienvenue, agent',
