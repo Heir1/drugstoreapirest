@@ -45,6 +45,7 @@ class CashJournalController extends Controller
                 'transaction_type' => 'required|in:income,expense',
                 'amount' => 'required|numeric|min:0',
                 'description' => 'nullable|string',
+                'created_by' => 'nullable|integer',
                 'currency_id' => 'required|exists:currencies,id',
                 'transaction_date' => 'required|date',
             ]);
@@ -64,16 +65,14 @@ class CashJournalController extends Controller
                 'amount' => $request->amount,
                 'description' => $request->description,
                 'currency_id' => $request->currency_id,
-                'created_by' => Auth::check() ? Auth::id() : null, // ID de l'utilisateur connecté (ou null si non connecté)
+                'created_by' => $request->created_by, // ID de l'utilisateur connecté (ou null si non connecté)
                 'transaction_date' => $request->transaction_date,
             ]);
     
-            // Retourner la réponse JSON avec succès
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction créée avec succès',
-                'data' => $cashJournal,
-            ], 201);
+            // Reload the created CashJournal with its relationships
+            $cashJournal->load(['currency', 'createdBy', 'updatedBy']);
+
+            return response()->json($cashJournal, 201);
     
         } catch (Exception $e) {
             // Gestion des erreurs inattendues
@@ -185,4 +184,59 @@ class CashJournalController extends Controller
         // Retourner la réponse JSON
         return response()->json($cashJournals, 200);
     }
+
+
+    public function detailedFilter(Request $request, $startdate, $enddate, $transaction_type, $created_by)
+    {
+
+        // Construire la requête de base avec les relations
+        $query = CashJournal::with(['currency', 'createdBy', 'updatedBy']);
+
+        // Ajouter 1 jour à la date de fin pour inclure la journée entière
+        $enddateInclusive = date('Y-m-d', strtotime($enddate . ' +1 day'));
+
+        // Appliquer le filtre par plage de dates
+        $query->whereBetween('created_at', [$startdate, $enddateInclusive]);
+
+        // Filtrer par transaction_type (income, expense, ou all)
+        if ($transaction_type !== 'all') {
+            $query->where('transaction_type', $transaction_type);
+        }
+
+        // Filtrer par created_by (user_id ou all)
+        if ($created_by !== 'all') {
+            $query->where('created_by', $created_by);
+        }
+
+        // Exécuter la requête et récupérer les résultats
+        $cashJournals = $query->get();
+
+        $groupedCashJournals = $cashJournals->groupBy('created_by')->map(function ($transactions, $createdById) {
+            // Récupérer le nom de l'utilisateur (createdBy)
+            $userName = $transactions->first()->createdBy->name ?? 'Inconnu';
+    
+            // Retourner un tableau structuré
+            return [
+                'created_by_id' => $createdById,
+                'created_by_name' => $userName,
+                'transactions' => $transactions->map(function ($transaction) {
+                    return [
+                        'id' => $transaction->id,
+                        'transaction_type' => $transaction->transaction_type,
+                        'amount' => $transaction->amount,
+                        'description' => $transaction->description,
+                        'currency' => $transaction->currency,
+                        'created_at' => $transaction->created_at,
+                        'updated_at' => $transaction->updated_at,
+                        'updated_by' => $transaction->updatedBy,
+                    ];
+                }),
+            ];
+        })->values(); // Convertir en tableau indexé
+
+        // Retourner la réponse JSON
+        return response()->json($groupedCashJournals, 200);
+
+    }
+
 }

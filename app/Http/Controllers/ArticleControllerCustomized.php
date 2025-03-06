@@ -156,35 +156,43 @@ class ArticleControllerCustomized extends Controller
         return response()->json($lowStockArticles, Response::HTTP_OK);
     }
 
-    // public function getLowStockArticles($firstrange, $secondrange)
-    // {
-    //     // Récupérer les articles avec un stock inférieur ou égal au seuil d'alerte
-    //     $lowStockArticles = Article::whereColumn('quantity', '<=', 'alert')->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->orderBy('updated_at', 'desc')->get();
-
-    //     // Vérifier si des articles ont été trouvés
-    //     if ($lowStockArticles->isEmpty()) {
-    //         return response()->json(['message' => 'Aucun article avec un stock en alerte'], Response::HTTP_OK);
-    //     }
-
-    //     return response()->json($lowStockArticles, Response::HTTP_OK);
-    // }
-
-    public function getExpiredArticles()
+    public function getExpiredArticles($firstrange, $secondrange)
     {
-        // Obtenir la date d'aujourd'hui
-        $today = Carbon::today();
-        $nearExpiryDate = $today->addDays(90);
+        // Vérifier que les dates sont valides
+        if (!$firstrange || !$secondrange) {
+            return response()->json(['message' => 'Les dates de la plage sont invalides'], Response::HTTP_BAD_REQUEST);
+        }
 
-        // Récupérer les articles expirés
-        $expiredArticles = Article::where('expiration_date', '<', $nearExpiryDate)->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+        // Récupérer les articles dont la date d'expiration est dans la plage spécifiée (inclusive)
+        $expiredArticles = Article::whereBetween('expiration_date', [$firstrange, $secondrange])
+            ->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])
+            ->orderBy('expiration_date', 'asc')
+            ->get();
 
         // Vérifier si des articles ont été trouvés
         if ($expiredArticles->isEmpty()) {
-            return response()->json(['message' => 'Aucun article expiré trouvé'], Response::HTTP_OK);
+            return response()->json([], Response::HTTP_OK);
         }
 
         return response()->json($expiredArticles, Response::HTTP_OK);
     }
+
+    // public function getExpiredArticles($firstrange, $secondrange)
+    // {
+    //     // Obtenir la date d'aujourd'hui
+    //     $today = Carbon::today();
+    //     $nearExpiryDate = $today->addDays(90);
+
+    //     // Récupérer les articles expirés
+    //     $expiredArticles = Article::where('expiration_date', '<', $nearExpiryDate)->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
+
+    //     // Vérifier si des articles ont été trouvés
+    //     if ($expiredArticles->isEmpty()) {
+    //         return response()->json(['message' => 'Aucun article expiré trouvé'], Response::HTTP_OK);
+    //     }
+
+    //     return response()->json($expiredArticles, Response::HTTP_OK);
+    // }
 
 }
 

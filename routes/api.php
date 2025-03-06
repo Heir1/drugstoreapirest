@@ -48,7 +48,7 @@ Route::apiResource('packagings', PackagingController::class);
 
 Route::get('articles', [ArticleControllerCustomized::class, 'getAllArticles']);
 Route::get('lowstockarticles/{firstrange}/{secondrange}', [ArticleControllerCustomized::class, 'getLowStockArticles']);
-Route::get('expirederticles', [ArticleControllerCustomized::class, 'getExpiredArticles']);
+Route::get('expirederticles/{firstrange}/{secondrange}', [ArticleControllerCustomized::class, 'getExpiredArticles']);
 Route::put('articles/{id}', [ArticleControllerCustomized::class, 'updateArticle']);
 
 // Exemple de route personnalisée pour un article spécifique
@@ -115,3 +115,4 @@ Route::get('cashjournal/{id}', [CashJournalController::class, 'show']); // Affic
 Route::put('cashjournal/{id}', [CashJournalController::class, 'update']); // Mettre à jour une entrée
 Route::delete('cashjournal/{id}', [CashJournalController::class, 'destroy']); // Supprimer une entrée
 Route::get('cashjournal/filter-by-date/{startdate}/{enddate}', [CashJournalController::class, 'filterByDate']); // Filtrer par date
+Route::get('cashjournal/detail-filter/{startdate}/{enddate}/{transaction_type}/{created_by}', [CashJournalController::class, 'detailedFilter']);
