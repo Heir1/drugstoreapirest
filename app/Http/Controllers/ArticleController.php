@@ -229,7 +229,7 @@ class ArticleController extends Controller
                     'selling_price' => $validated['selling_price'],
                     'currency_id' => $validated['currency_id'],
                     'alert' => $validated['alert'],
-                    'is_active' => $validated['is_active'],
+                    // 'is_active' => $validated['is_active'],
                     'expiration_date' => $validated['expiration_date'],
                     'comment' => $validated['comment'],
                     'updated_by' => auth()->id(),
