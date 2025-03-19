@@ -196,6 +196,7 @@ class ArticleController extends Controller
                     'molecules' => 'nullable|string',
                     'suppliers' => 'nullable|string',
                     'indications' => 'nullable|string',
+                    'updated_by' => 'nullable',
                 ]);
         
                 // Mise à jour de la catégorie
@@ -232,7 +233,7 @@ class ArticleController extends Controller
                     // 'is_active' => $validated['is_active'],
                     'expiration_date' => $validated['expiration_date'],
                     'comment' => $validated['comment'],
-                    'updated_by' => auth()->id(),
+                    'updated_by' => $validated['updated_by'],
                 ]);
             
                 // Mise à jour des relations many-to-many

@@ -70,6 +70,7 @@ class MovementController extends Controller
                 $validated = $request->validate([
                     'movement_type_id' => 'required|exists:movement_types,id',
                     'articles' => 'required|array',
+                    'created_by' => 'nullable'
                 ]);
 
                 $lastMovement = null;
@@ -104,6 +105,7 @@ class MovementController extends Controller
                     $movement->movement_type_id = $validated['movement_type_id'];
                     $movement->reference = "REF-" . $newUuid;
                     $movement->old_article_stock = $article->quantity;
+                    $movement->created_by = $validated['created_by'];
                     $movement->save();
             
                     // // Mise à jour du stock selon le type de mouvement
@@ -188,22 +190,18 @@ class MovementController extends Controller
             'quantity' => 'nullable|integer',
             'movement_type_id' => 'nullable|exists:movement_types,id',
             'movement_date' => 'nullable|date',
+            'updated_by' => 'nullable'
             // 'reference' => 'nullable|string|max:100',
         ]);
 
         // Réinitialiser le stock avant mise à jour
         $article = Article::find($movement->article_id);
         $oldQuantity = $movement->quantity;
-        // $oldMovementType = $movement->movementType->id;
 
         // if ($oldMovementType === 1) {
         $article->quantity -= $oldQuantity;
         $article->update();
         // } 
-        
-        // elseif ($oldMovementType === 'Sortie') {
-        //     $article->quantity += $oldQuantity;
-        // }
 
         // Mettre à jour le mouvement
         $movement->update($validated);
@@ -218,24 +216,8 @@ class MovementController extends Controller
         // if ($newMovementType === 1) {
         $article->quantity += $newQuantity;
         // }       
-        
-        // elseif ($newMovementType === 'Sortie') {
-        //     if ($article->quantity < $newQuantity) {
-        //         return response()->json([
-        //             'error' => 'Not enough stock for this operation.'
-        //         ], 400);
-        //     }
-        //     $article->quantity -= $newQuantity;
-        // } elseif ($newMovementType === 'adjustment') {
-        //     $article->quantity = $newQuantity;
-        // }
 
         $article->save();
-
-        // return response()->json([
-        //     'message' => 'Movement updated successfully.',
-        //     'movement' => $movement,
-        // ], 200);
 
         $movement->load(['article']);
 

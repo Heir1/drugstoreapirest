@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreignId('movement_type_id')->constrained('movement_types')->onDelete('cascade'); // Foreign key to movement_types
             $table->date('movement_date')->default(DB::raw('CURRENT_DATE'));
             $table->string('reference', 100)->nullable();
+            // $table->string('created_by')->nullable();
+            // $table->string('updated_by')->nullable();
             $table->timestamps();
         });
     }

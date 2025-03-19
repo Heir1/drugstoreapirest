@@ -177,33 +177,4 @@ class ArticleControllerCustomized extends Controller
         return response()->json($expiredArticles, Response::HTTP_OK);
     }
 
-    // public function getExpiredArticles($firstrange, $secondrange)
-    // {
-    //     // Obtenir la date d'aujourd'hui
-    //     $today = Carbon::today();
-    //     $nearExpiryDate = $today->addDays(90);
-
-    //     // Récupérer les articles expirés
-    //     $expiredArticles = Article::where('expiration_date', '<', $nearExpiryDate)->with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
-
-    //     // Vérifier si des articles ont été trouvés
-    //     if ($expiredArticles->isEmpty()) {
-    //         return response()->json(['message' => 'Aucun article expiré trouvé'], Response::HTTP_OK);
-    //     }
-
-    //     return response()->json($expiredArticles, Response::HTTP_OK);
-    // }
-
 }
-
-
-// $articles = Article::with(['currency', 'category', 'packaging', 'placements', 'molecules', 'suppliers', 'indications'])->get();
-
-// $articles->each(function ($article) {
-//     $article->placements->makeHidden('pivot');
-//     $article->molecules->makeHidden('pivot');
-//     $article->suppliers->makeHidden('pivot');
-//     $article->indications->makeHidden('pivot');
-// });
-
-// return response()->json($articles);
