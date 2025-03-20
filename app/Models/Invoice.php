@@ -9,7 +9,7 @@ class Invoice extends Model
     //
     
     
-    protected $fillable = ['invoice_date','paymentmode_id', 'client_name', 'total_excl_tax', 'vat', 'total_incl_tax', 'invoice_number', 'is_proforma'];
+    protected $fillable = ['invoice_date','paymentmode_id', 'client_name', 'total_excl_tax', 'vat', 'total_incl_tax', 'invoice_number', 'is_proforma', 'created_by', 'updated_by'];
 
     public function invoiceLines()
     {

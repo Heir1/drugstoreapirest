@@ -219,7 +219,9 @@ class MovementController extends Controller
 
         $article->save();
 
-        $movement->load(['article']);
+        $movement->load(['article.placements', 'article.suppliers']);
+
+        // 'article.placements', 'article.suppliers
 
         return response()->json( $movement, Response::HTTP_OK);
 
