@@ -246,16 +246,21 @@ class MovementController extends Controller
 
         // if ($movementType === 1) {
 
-        $article->quantity -= $movement->quantity;
+        if($article->quantity >= $movement->quantity){
+            $article->quantity -= $movement->quantity;
+    
+            // } elseif ($movementType === 2) {
+            //     $article->quantity += $movement->quantity;
+            // }
+    
+            $article->save();
+    
+            $movement->delete();
+    
+            return response()->json(['message' => 'Movement deleted successfully.'], 200);
+        }
 
-        // } elseif ($movementType === 2) {
-        //     $article->quantity += $movement->quantity;
-        // }
+        return response()->json(['message' => 'La quantité de stock est inférieure à la quantité approvisionnée'], 400);
 
-        $article->save();
-
-        $movement->delete();
-
-        return response()->json(['message' => 'Movement deleted successfully.'], 200);
     }
 }

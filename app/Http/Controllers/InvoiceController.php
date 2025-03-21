@@ -257,7 +257,7 @@ class InvoiceController extends Controller
                 return response()->json(['error' => 'Article not found'], Response::HTTP_NOT_FOUND);
             }
 
-            if($invoice->is_proforma){
+            if(!$invoice->is_proforma){
                 // Restaurer la quantité de l'article
                 $article->quantity += $invoiceLine->quantity;
                 $article->save();
