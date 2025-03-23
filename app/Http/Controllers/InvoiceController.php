@@ -169,11 +169,12 @@ class InvoiceController extends Controller
             'quantity' => 'required|integer|min:1', // La quantité doit être un entier et >= 1
             'updated_by' => 'nullable'
         ]);
-    
+
+        
         // Récupérer la ligne de facture (InvoiceLine)
         $invoiceLine = InvoiceLine::with(['invoices', 'articles'])->find($id);
+        $invoice = Invoice::where('id',$invoiceLine->invoice_id)->first();
 
-        $invoice = Invoice::where('invoice_id',$invoiceLine->invoice_id)->first();
         $invoice->updated_by = $validated['updated_by'];
         // Vérifier si la ligne de facture existe
         if (!$invoiceLine) {
