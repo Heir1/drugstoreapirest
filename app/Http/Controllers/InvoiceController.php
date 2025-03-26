@@ -257,16 +257,20 @@ class InvoiceController extends Controller
                 return response()->json(['error' => 'Invoice line not found'], Response::HTTP_NOT_FOUND);
             }
 
-            // Vérifier si l'article existe
-            if (!$article) {
-                return response()->json(['error' => 'Article not found'], Response::HTTP_NOT_FOUND);
-            }
+            // return "Yes";
+
 
             if(!$invoice->is_proforma){
                 // Restaurer la quantité de l'article
                 if($isInvoice == "no" ){
                     // Récupérer l'article associé
                     $article = Article::find($invoiceLine->article_id);
+
+                    // Vérifier si l'article existe
+                    if (!$article) {
+                        return response()->json(['error' => 'Article not found'], Response::HTTP_NOT_FOUND);
+                    }
+
                     $article->quantity += $invoiceLine->quantity;
 
                     // Supprimer la ligne de facture
@@ -276,12 +280,18 @@ class InvoiceController extends Controller
                     foreach ($invoiceLines as $invoiceLine) {
                         // Récupérer l'article associé
                         $article = Article::find($invoiceLine->article_id);
+
+                        // Vérifier si l'article existe
+                        if (!$article) {
+                            return response()->json(['error' => 'Article not found'], Response::HTTP_NOT_FOUND);
+                        }
+
                         $article->quantity += $invoiceLine->quantity;
+                        $article->save();
 
                         $invoiceLine->delete();
                     }
                 }
-                $article->save();
             }
 
             // Commit de la transaction
@@ -289,6 +299,7 @@ class InvoiceController extends Controller
 
             // Retourner une réponse HTTP 204 (No Content)
             return response()->json(null, Response::HTTP_NO_CONTENT);
+            
         } catch (\Exception $e) {
             // Rollback de la transaction en cas d'erreur
             DB::rollBack();
