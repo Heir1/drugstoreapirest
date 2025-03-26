@@ -87,7 +87,10 @@ class InvoiceController extends Controller
 
                 // Vérification du stock (uniquement pour une facture réelle)
                 if (!$isProforma && $article->quantity < $quantity) {
-                    throw new \Exception("Insufficient stock for article ID {$article->id}.");
+                    return response()->json([
+                        'error' => 'Le stock est insuffisant.',
+                        'message' => 'Le stock est insuffisant.',
+                    ], 500);
                 }
 
                 $unitPrice = $article->selling_price;
@@ -234,8 +237,10 @@ class InvoiceController extends Controller
     }
     
 
-    public function deleteInvoice($id)
+    public function deleteInvoice($id, $isInvoice)
     {
+
+        // api/invoices/44/yes
         
         DB::beginTransaction();
 
@@ -245,13 +250,12 @@ class InvoiceController extends Controller
 
             $invoice = Invoice::find($invoiceLine->invoice_id);
 
+            $invoiceLines = InvoiceLine::where("invoice_id", $invoice->id)->get();
+
             // Vérifier si la ligne de facture existe
             if (!$invoiceLine) {
                 return response()->json(['error' => 'Invoice line not found'], Response::HTTP_NOT_FOUND);
             }
-
-            // Récupérer l'article associé
-            $article = Article::find($invoiceLine->article_id);
 
             // Vérifier si l'article existe
             if (!$article) {
@@ -260,13 +264,25 @@ class InvoiceController extends Controller
 
             if(!$invoice->is_proforma){
                 // Restaurer la quantité de l'article
-                $article->quantity += $invoiceLine->quantity;
+                if($isInvoice == "no" ){
+                    // Récupérer l'article associé
+                    $article = Article::find($invoiceLine->article_id);
+                    $article->quantity += $invoiceLine->quantity;
+
+                    // Supprimer la ligne de facture
+                    $invoiceLine->delete();
+                }
+                else{
+                    foreach ($invoiceLines as $invoiceLine) {
+                        // Récupérer l'article associé
+                        $article = Article::find($invoiceLine->article_id);
+                        $article->quantity += $invoiceLine->quantity;
+
+                        $invoiceLine->delete();
+                    }
+                }
                 $article->save();
             }
-
-
-            // Supprimer la ligne de facture
-            $invoiceLine->delete();
 
             // Commit de la transaction
             DB::commit();

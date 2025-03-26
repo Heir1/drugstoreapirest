@@ -35,6 +35,8 @@ class ArticleControllerCustomized extends Controller
     }
 
     public function updateArticle(Request $request, $id){
+
+        return "Still true";
         
         try {
 
@@ -91,6 +93,8 @@ class ArticleControllerCustomized extends Controller
                 'comment' => $validated['comment'],
                 'updated_by' => auth()->user()->id ?? null,
             ]);
+
+            return "Still true";
 
             // Synchroniser les placements (relation many-to-many)
             if (isset($validated['placements'])) {

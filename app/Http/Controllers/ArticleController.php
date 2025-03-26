@@ -196,8 +196,10 @@ class ArticleController extends Controller
                     'molecules' => 'nullable|string',
                     'suppliers' => 'nullable|string',
                     'indications' => 'nullable|string',
-                    'updated_by' => 'nullable',
+                    'updated_by' => 'nullable|string',
                 ]);
+
+                
         
                 // Mise à jour de la catégorie
                 if (!empty($validated['category_id'])) {
@@ -220,7 +222,7 @@ class ArticleController extends Controller
                         $article->packaging_id = $packaging->id;
                     }
                 }
-            
+
                 // Mise à jour de l'article
                 $article->update([
                     'barcode' => $validated['barcode'],
@@ -230,11 +232,13 @@ class ArticleController extends Controller
                     'selling_price' => $validated['selling_price'],
                     'currency_id' => $validated['currency_id'],
                     'alert' => $validated['alert'],
-                    // 'is_active' => $validated['is_active'],
+                    'is_active' => $validated['is_active'],
                     'expiration_date' => $validated['expiration_date'],
                     'comment' => $validated['comment'],
                     'updated_by' => $validated['updated_by'],
                 ]);
+
+                
             
                 // Mise à jour des relations many-to-many
                 $relations = [
