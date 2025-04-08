@@ -69,4 +69,9 @@ class User extends Authenticatable
         return $this->role === self::ROLE_USER;
     }
 
+    public function cashJournalsAsTicketCounter()
+    {
+        return $this->hasMany(CashJournal::class, 'ticket_counter');
+    }
+
 }

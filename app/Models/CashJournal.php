@@ -22,6 +22,7 @@ class CashJournal extends Model
         'created_by', // ID de l'utilisateur qui a créé l'entrée
         'updated_by', // ID de l'utilisateur qui a mis à jour l'entrée
         'transaction_date',
+        'ticket_counter',
     ];
 
     /**
@@ -53,4 +54,10 @@ class CashJournal extends Model
     {
         return $this->belongsTo(Currency::class, 'currency_id');
     }
+
+    public function ticketCounterUser()
+    {
+        return $this->belongsTo(User::class, 'ticket_counter');
+    }
+
 }
