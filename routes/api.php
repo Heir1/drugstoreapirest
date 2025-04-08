@@ -88,7 +88,7 @@ Route::get('/invoices/mode/{paymentmodeid}/{invoice}/{firstrange}/{secondrange}'
 Route::get('/invoicenumber', [InvoiceController::class, 'getInvoiceNumber']);
 Route::post('/invoices', [InvoiceController::class, 'createInvoice']);
 Route::put('/invoices/{id}', [InvoiceController::class, 'updateInvoice']);
-Route::delete('/invoices/{id}', [InvoiceController::class, 'deleteInvoice']);
+Route::delete('/invoices/{id}/{isInvoice}', [InvoiceController::class, 'deleteInvoice']);
 
 
 Route::apiResource('rates', RateController::class);

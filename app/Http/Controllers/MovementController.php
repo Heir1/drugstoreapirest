@@ -221,8 +221,6 @@ class MovementController extends Controller
 
         $movement->load(['article.placements', 'article.suppliers']);
 
-        // 'article.placements', 'article.suppliers
-
         return response()->json( $movement, Response::HTTP_OK);
 
     }
@@ -242,22 +240,16 @@ class MovementController extends Controller
         // Réinitialiser le stock avant suppression
 
         $article = Article::find($movement->article_id);
-        // $movementType = $movement->movementType->id;
-
-        // if ($movementType === 1) {
 
         if($article->quantity >= $movement->quantity){
-            $article->quantity -= $movement->quantity;
-    
-            // } elseif ($movementType === 2) {
-            //     $article->quantity += $movement->quantity;
-            // }
-    
+
+            $article->quantity -= $movement->quantity;    
             $article->save();
-    
             $movement->delete();
-    
-            return response()->json(['message' => 'Movement deleted successfully.'], 200);
+
+            $movement->load(['article.placements', 'article.suppliers']);
+            return response()->json( $movement, Response::HTTP_OK);
+
         }
 
         return response()->json(['message' => 'La quantité de stock est inférieure à la quantité approvisionnée'], 400);
