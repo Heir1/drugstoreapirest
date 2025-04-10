@@ -22,10 +22,10 @@ class CashJournalController extends Controller
         if ($request->has('date')) {
             $date = $request->query('date');
             $cashJournals = CashJournal::whereDate('created_at', $date)
-                ->with(['currency', 'createdBy', 'updatedBy', 'ticketCounterUser'])
+                ->with(['currency', 'createdBy', 'updatedBy', 'ticketCounter'])
                 ->get();
         } else {
-            $cashJournals = CashJournal::with(['currency', 'createdBy', 'updatedBy', 'ticketCounterUser'])->get();
+            $cashJournals = CashJournal::with(['currency', 'createdBy', 'updatedBy', 'ticketCounter'])->get();
         }
 
         return response()->json($cashJournals, 200);
@@ -116,6 +116,7 @@ class CashJournalController extends Controller
         $validator = Validator::make($request->all(), [
             'transaction_type' => 'sometimes|in:income,expense',
             'amount' => 'sometimes|numeric|min:0',
+            'ticket_counter' => 'nullable|string',
             'description' => 'nullable|string',
             'currency_id' => 'sometimes|exists:currencies,id',
         ]);
@@ -130,17 +131,19 @@ class CashJournalController extends Controller
         if (!$cashJournal) {
             return response()->json(['error' => 'Entry not found'], 404);
         }
+        
 
         // Mise à jour de l'entrée
         $cashJournal->update([
             'transaction_type' => $request->transaction_type ?? $cashJournal->transaction_type,
             'amount' => $request->amount ?? $cashJournal->amount,
+            'ticket_counter' => $request->ticket_counter ?? $cashJournal->ticket_counter,
             'description' => $request->description ?? $cashJournal->description,
             'currency_id' => $request->currency_id ?? $cashJournal->currency_id,
             'updated_by' => Auth::check() ? Auth::id() : null // ID de l'utilisateur connecté
         ]);
 
-        $cashJournal = CashJournal::with(['currency', 'createdBy', 'updatedBy'])->find($id);
+        $cashJournal = CashJournal::with(['currency', 'createdBy', 'updatedBy', 'ticketCounter'])->find($id);
 
         return response()->json($cashJournal, 200);
     }
@@ -174,7 +177,7 @@ class CashJournalController extends Controller
     {
 
         // Construire la requête de base
-        $query = CashJournal::with(['currency', 'createdBy', 'updatedBy']);
+        $query = CashJournal::with(['currency', 'createdBy', 'updatedBy', 'ticketCounter']);
 
         $enddateInclusive = date('Y-m-d', strtotime($enddate . ' +1 day'));
         // Appliquer le filtre par plage de dates
@@ -188,65 +191,65 @@ class CashJournalController extends Controller
     }
 
     public function detailedFilter(Request $request, $startdate, $enddate, $transaction_type, $created_by)
-{
-    // Construire la requête de base avec les relations (ajout de ticketCounterUser)
-    $query = CashJournal::with(['currency', 'createdBy', 'updatedBy', 'ticketCounterUser']);
+    {
+        // Construire la requête de base avec les relations (ajout de ticketCounter)
+        $query = CashJournal::with(['currency', 'createdBy', 'updatedBy', 'ticketCounter']);
 
-    // Ajouter 1 jour à la date de fin pour inclure la journée entière
-    $enddateInclusive = date('Y-m-d', strtotime($enddate . ' +1 day'));
+        // Ajouter 1 jour à la date de fin pour inclure la journée entière
+        $enddateInclusive = date('Y-m-d', strtotime($enddate . ' +1 day'));
 
-    // Appliquer le filtre par plage de dates
-    $query->whereBetween('created_at', [$startdate, $enddateInclusive]);
+        // Appliquer le filtre par plage de dates
+        $query->whereBetween('created_at', [$startdate, $enddateInclusive]);
 
-    // Filtrer par transaction_type (income, expense, ou all)
-    if ($transaction_type !== 'all') {
-        $query->where('transaction_type', $transaction_type);
+        // Filtrer par transaction_type (income, expense, ou all)
+        if ($transaction_type !== 'all') {
+            $query->where('transaction_type', $transaction_type);
+        }
+
+        // Filtrer par created_by (user_id ou all)
+        if ($created_by !== 'all') {
+            $query->where('ticket_counter', $created_by);
+        }
+
+        // Exécuter la requête et récupérer les résultats
+        $cashJournals = $query->get();
+
+        // Grouper par created_by et par date
+        $groupedCashJournals = $cashJournals->groupBy(['created_by', function ($transaction) {
+            return $transaction->created_at->format('Y-m-d');
+        }])->map(function ($transactionsByDate, $createdById) {
+            // Récupérer le nom de l'utilisateur (createdBy)
+            $userName = $transactionsByDate->first()->first()->createdBy->name ?? 'Inconnu';
+            
+            // Récupérer le nom du ticket counter
+            $ticketCounterName = $transactionsByDate->first()->first()->ticketCounter->name ?? 'Non spécifié';
+
+            // Structurer les transactions par date
+            return $transactionsByDate->map(function ($transactions, $date) use ($userName, $ticketCounterName) {
+                return [
+                    'date' => $date,
+                    'name' => $userName,
+                    'ticket_counter_name' => $ticketCounterName, // Ajout du nom du ticket counter
+                    'transactions' => $transactions->map(function ($transaction) {
+                        return [
+                            'id' => $transaction->id,
+                            'transaction_type' => $transaction->transaction_type,
+                            'amount' => $transaction->amount,
+                            'description' => $transaction->description,
+                            'currency' => $transaction->currency,
+                            'created_at' => $transaction->created_at,
+                            'updated_at' => $transaction->updated_at,
+                            'updated_by' => $transaction->updatedBy,
+                            'ticket_counter' => $transaction->ticketCounter, // Ajout de l'objet complet du ticket counter
+                        ];
+                    }),
+                ];
+            });
+        })->flatten(1);
+
+        // Retourner la réponse JSON
+        return response()->json($groupedCashJournals, 200);
     }
-
-    // Filtrer par created_by (user_id ou all)
-    if ($created_by !== 'all') {
-        $query->where('created_by', $created_by);
-    }
-
-    // Exécuter la requête et récupérer les résultats
-    $cashJournals = $query->get();
-
-    // Grouper par created_by et par date
-    $groupedCashJournals = $cashJournals->groupBy(['created_by', function ($transaction) {
-        return $transaction->created_at->format('Y-m-d');
-    }])->map(function ($transactionsByDate, $createdById) {
-        // Récupérer le nom de l'utilisateur (createdBy)
-        $userName = $transactionsByDate->first()->first()->createdBy->name ?? 'Inconnu';
-        
-        // Récupérer le nom du ticket counter
-        $ticketCounterName = $transactionsByDate->first()->first()->ticketCounterUser->name ?? 'Non spécifié';
-
-        // Structurer les transactions par date
-        return $transactionsByDate->map(function ($transactions, $date) use ($userName, $ticketCounterName) {
-            return [
-                'date' => $date,
-                'name' => $userName,
-                'ticket_counter_name' => $ticketCounterName, // Ajout du nom du ticket counter
-                'transactions' => $transactions->map(function ($transaction) {
-                    return [
-                        'id' => $transaction->id,
-                        'transaction_type' => $transaction->transaction_type,
-                        'amount' => $transaction->amount,
-                        'description' => $transaction->description,
-                        'currency' => $transaction->currency,
-                        'created_at' => $transaction->created_at,
-                        'updated_at' => $transaction->updated_at,
-                        'updated_by' => $transaction->updatedBy,
-                        'ticket_counter' => $transaction->ticketCounterUser, // Ajout de l'objet complet du ticket counter
-                    ];
-                }),
-            ];
-        });
-    })->flatten(1);
-
-    // Retourner la réponse JSON
-    return response()->json($groupedCashJournals, 200);
-}
 
 
 }

@@ -55,7 +55,7 @@ class CashJournal extends Model
         return $this->belongsTo(Currency::class, 'currency_id');
     }
 
-    public function ticketCounterUser()
+    public function ticketCounter()
     {
         return $this->belongsTo(User::class, 'ticket_counter');
     }
