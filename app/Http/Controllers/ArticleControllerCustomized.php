@@ -62,21 +62,6 @@ class ArticleControllerCustomized extends Controller
 
             $article = Article::find($id);
 
-
-            // Vérification de l'existence d'un article avec le même barcode
-            // if (Article::where('barcode', $validated['barcode'])->exists()) {
-            //     return response()->json([
-            //         'error' => 'Un article avec ce code-barres existe déjà.'
-            //     ], Response::HTTP_CONFLICT); // Code 409 pour conflit
-            // }
-
-            // Vérification de l'existence d'un article avec la même description
-            // if (Article::where('description', $validated['description'])->exists()) {
-            //     return response()->json([
-            //         'error' => 'Un article avec cette description existe déjà.'
-            //     ], Response::HTTP_CONFLICT); // Code 409 pour conflit
-            // }
-
             // Mettre à jour l'article
             $article->update([
                 'barcode' => $validated['barcode'],

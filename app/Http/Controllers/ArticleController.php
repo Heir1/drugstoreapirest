@@ -65,7 +65,7 @@ class ArticleController extends Controller
          try {
             // Validation des données d'entrée
             $validated = $request->validate([
-            'barcode' => 'required|string',
+            'barcode' => 'nullable|string',
             'description' => 'required|string',
             'quantity' => 'required|integer',
             'purchase_price' => 'required|numeric',
@@ -106,6 +106,7 @@ class ArticleController extends Controller
             $article = Article::create(array_merge($validated, [
                 'category_id' => $category_id,
                 'packaging_id' => $packaging_id,
+                'is_active' => true,
                 'row_id' => Str::uuid(),
                 'created_by' => $validated['created_by'],
             ]));
@@ -180,7 +181,7 @@ class ArticleController extends Controller
             
                 // Validation des données d'entrée
                 $validated = $request->validate([
-                    'barcode' => 'required|string',
+                    'barcode' => 'nullable|string',
                     'description' => 'required|string',
                     'quantity' => 'required|integer',
                     'purchase_price' => 'required|numeric',
