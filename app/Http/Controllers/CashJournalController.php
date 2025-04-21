@@ -70,9 +70,10 @@ class CashJournalController extends Controller
                 'created_by' => $request->created_by, // ID de l'utilisateur connecté (ou null si non connecté)
                 'transaction_date' => $request->transaction_date,
             ]);
-    
+
+            
             // Reload the created CashJournal with its relationships
-            $cashJournal->load(['currency', 'createdBy', 'updatedBy', 'ticket_counter']);
+            $cashJournal->load(['currency', 'createdBy', 'updatedBy', 'ticketCounter']);
 
             return response()->json($cashJournal, 201);
     
