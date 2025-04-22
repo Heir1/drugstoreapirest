@@ -12,16 +12,27 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('article_supplier', function (Blueprint $table) {
-            $table->uuid('article_id');  // Clé étrangère vers la table articles
-            $table->uuid('supplier_id')->nullable();  // Clé étrangère vers la table suppliers, maintenant nullable
-            $table->timestamps();  // Created at et Updated at
-
+            // Supprimez cette ligne car vous utilisez une clé primaire composite
+            // $table->uuid('id')->primary()->default(DB::raw('NEWID()'));
+            
+            // Ajoutez d'abord les colonnes avant de créer les contraintes
+            $table->unsignedBigInteger('article_id'); // Colonne article_id manquante
+            $table->unsignedBigInteger('supplier_id');
+            $table->timestamps();
+        
             // Définir les clés étrangères
-            $table->foreign('article_id')->references('id')->on('articles')->onDelete('cascade');
-            $table->foreign('supplier_id')->references('id')->on('suppliers')->onDelete('cascade')->nullable();
-
-            // Assurer l'unicité de la combinaison article_id + supplier_id
-            $table->primary(['article_id', 'supplier_id']);
+            $table->foreign('article_id')
+                  ->references('id')
+                  ->on('articles')
+                  ->onDelete('cascade');
+                  
+            $table->foreign('supplier_id')
+                  ->references('id')
+                  ->on('suppliers')
+                  ->onDelete('cascade');
+        
+            // Clé primaire composite (pas besoin de ->primary() si vous utilisez uuid() comme ci-dessus)
+            $table->unique(['article_id', 'supplier_id']);
         });
     }
 

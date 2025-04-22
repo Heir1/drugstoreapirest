@@ -13,18 +13,33 @@ return new class extends Migration
     {
         Schema::create('cash_journals', function (Blueprint $table) {
             $table->id();
-            $table->enum('transaction_type', ['income', 'expense']); // Type de transaction (recette ou dépense)
-            $table->decimal('amount', 10, 2); // Montant de la transaction
-            $table->text('description')->nullable(); // Description facultative
-            $table->string('currency_id'); // Clé étrangère vers la table des devises
-            $table->unsignedBigInteger('created_by')->nullable(); // ID de l'utilisateur qui a créé l'entrée (nullable)
-            $table->unsignedBigInteger('updated_by')->nullable(); // ID de l'utilisateur qui a mis à jour l'entrée (nullable)
-            $table->timestamps(); // created_at et updated_at
-
-            // Clés étrangères
-            $table->foreign('currency_id')->references('id')->on('currencies')->onDelete('cascade');
-            $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('updated_by')->references('id')->on('users')->onDelete('cascade');
+            $table->enum('transaction_type', ['income', 'expense']);
+            $table->decimal('amount', 10, 2);
+            $table->text('description')->nullable();
+            
+            // Utilisez le même type que currencies.id (UUID)
+            $table->unsignedBigInteger('currency_id');
+            
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->timestamps();
+        
+            // Clé étrangère pour currency (cascade conservée)
+            $table->foreign('currency_id')
+                  ->references('id')
+                  ->on('currencies')
+                  ->onDelete('cascade');
+        
+            // Pour les utilisateurs, utilisez onDelete('no action')
+            $table->foreign('created_by')
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('no action'); // Changé à 'no action'
+        
+            $table->foreign('updated_by')
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('no action'); // Changé à 'no action'
         });
     }
 

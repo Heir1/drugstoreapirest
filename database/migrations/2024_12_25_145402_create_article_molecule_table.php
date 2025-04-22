@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('article_molecule', function (Blueprint $table) {
-            $table->uuid('article_id');
-            $table->uuid('molecule_id');
+            $table->unsignedBigInteger('article_id');
+            $table->unsignedBigInteger('molecule_id');
             $table->timestamps();
         
             // Définir les clés étrangères

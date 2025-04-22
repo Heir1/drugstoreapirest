@@ -13,15 +13,16 @@ return new class extends Migration
     {
         Schema::create('movements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('article_id')->constrained('articles')->onDelete('cascade');
+            $table->unsignedBigInteger('article_id');
             $table->integer('old_article_stock');
             $table->integer('quantity');
             $table->foreignId('movement_type_id')->constrained('movement_types')->onDelete('cascade'); // Foreign key to movement_types
-            $table->date('movement_date')->default(DB::raw('CURRENT_DATE'));
+            $table->date('movement_date')->useCurrent();
             $table->string('reference', 100)->nullable();
-            // $table->string('created_by')->nullable();
-            // $table->string('updated_by')->nullable();
             $table->timestamps();
+        
+            // Ajoute manuellement la contrainte étrangère
+            $table->foreign('article_id')->references('id')->on('articles')->onDelete('cascade');
         });
     }
 

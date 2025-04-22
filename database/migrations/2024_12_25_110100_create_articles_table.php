@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('barcode')->unique()->nullable();
             $table->text('location')->nullable();
-            $table->text('description')->unique();
+            $table->string('description')->unique();
             $table->integer('alert')->default(0);
             $table->date('expiration_date')->nullable();
             $table->integer('quantity')->default(0);
@@ -30,11 +30,11 @@ return new class extends Migration
             $table->string('updated_by')->nullable();
 
             // Définition de la clé étrangère
-            $table->uuid('currency_id'); // Add the currency_id column
+            $table->unsignedBigInteger('currency_id')->nullable(); // Ajoutez ->nullable()
             $table->foreign('currency_id')->references('id')->on('currencies')->onDelete('set null'); // Set up foreign key constraint
-            $table->uuid('category_id')->nullable();  // Ajouter la colonne pour la clé étrangère
+            $table->unsignedBigInteger('category_id')->nullable();  // Ajouter la colonne pour la clé étrangère
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('set null');  // Définir la contrainte de clé étrangère
-            $table->uuid('packaging_id')->nullable();  // Ajouter la colonne pour la clé étrangère
+            $table->unsignedBigInteger('packaging_id')->nullable();  // Ajouter la colonne pour la clé étrangère
             $table->foreign('packaging_id')->references('id')->on('packagings')->onDelete('set null');  // Définir la contrainte de clé étrangère
 
         });

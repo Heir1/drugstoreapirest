@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('invoice_lines', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('article_id');
             $table->foreignId('invoice_id')->constrained('invoices')->onDelete('cascade');
-            $table->foreignId('article_id')->constrained('articles')->onDelete('cascade');
+            $table->foreign('article_id')->references('id')->on('articles')->onDelete('cascade');
             $table->integer('quantity');
             $table->decimal('unit_price', 10, 2);
             $table->decimal('subtotal', 10, 2);

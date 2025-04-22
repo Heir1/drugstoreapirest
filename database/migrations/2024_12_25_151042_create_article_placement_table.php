@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('article_placement', function (Blueprint $table) {
             
-            $table->uuid('article_id');
-            $table->uuid('placement_id')->nullable();
+            $table->unsignedBigInteger('article_id');
+            $table->unsignedBigInteger('placement_id')->nullable();
             $table->timestamps();
         
             // Définir les clés étrangères
